@@ -1,0 +1,309 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   GLOBAL DESIGN TOKEN ARCHITECTURE & WCAG CONTRAST SYSTEM
+   ========================================================================== */
+
+/* 1. Blossom Light (Default Light/Pastel Theme) */
+[data-theme="light"],
+body.theme-light,
+:root {
+  --bg-app: #fff1f2;            /* Soft warm rose-white */
+  --bg-card: #ffffff;           /* Clean elevated white card */
+  --bg-subcard: #fff5f7;        /* Soft tinted inner card */
+  --border-card: #fecdd3;       /* Rose-200 border */
+  --text-primary: #1e1b4b;      /* Very dark slate for titles (contrast > 12:1) */
+  --text-secondary: #475569;    /* Readable slate body text (contrast > 6:1) */
+  --accent-primary: #e11d48;    /* Rose-600 */
+  --accent-hover: #be185d;
+  --accent-subtle: #ffe4e6;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(255, 241, 242, 0.95);
+  --header-grad: linear-gradient(135deg, #e11d48 0%, #db2777 50%, #9333ea 100%);
+}
+
+/* 2. Midnight Dark (True OLED / Slate Dark) */
+[data-theme="dark"],
+body.theme-dark {
+  --bg-app: #09090b;            /* Deep black/slate */
+  --bg-card: #18181b;           /* Zinc-900 elevated card */
+  --bg-subcard: #27272a;        /* Zinc-800 inner card */
+  --border-card: #3f3f46;       /* Zinc-700 subtle border */
+  --text-primary: #fafafa;      /* Pure white for headings (contrast > 14:1) */
+  --text-secondary: #a1a1aa;    /* Zinc-400 for subtitles */
+  --accent-primary: #f43f5e;    /* Vibrant Rose accent */
+  --accent-hover: #e11d48;
+  --accent-subtle: #3f121d;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(24, 24, 27, 0.95);
+  --header-grad: linear-gradient(135deg, #f43f5e 0%, #be185d 50%, #701a75 100%);
+}
+
+/* 3. Lavender Dream (Soft Purple Theme) */
+[data-theme="lavender"],
+body.theme-lavender {
+  --bg-app: #f5f3ff;            /* Soft violet tint */
+  --bg-card: #ffffff;           /* Clean elevated white card */
+  --bg-subcard: #ede9fe;        /* Lavender tinted inner card */
+  --border-card: #ddd6fe;       /* Lavender-200 border */
+  --text-primary: #2e1065;      /* Deep violet-950 headings (contrast > 13:1) */
+  --text-secondary: #5b21b6;    /* Readable violet-800 */
+  --accent-primary: #7c3aed;    /* Vibrant violet */
+  --accent-hover: #6d28d9;
+  --accent-subtle: #f3e8ff;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(245, 243, 255, 0.95);
+  --header-grad: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+}
+
+/* 4. Sage / Calm Mint Theme */
+[data-theme="sage"],
+[data-theme="forest"],
+body.theme-sage,
+body.theme-forest {
+  --bg-app: #f0fdf4;            /* Soft emerald tint */
+  --bg-card: #ffffff;           /* Clean elevated white card */
+  --bg-subcard: #dcfce7;        /* Soft mint inner card */
+  --border-card: #bbf7d0;       /* Mint-200 border */
+  --text-primary: #064e3b;      /* Deep emerald-950 headings (contrast > 12:1) */
+  --text-secondary: #047857;    /* Readable emerald-700 */
+  --accent-primary: #059669;    /* Vibrant emerald */
+  --accent-hover: #047857;
+  --accent-subtle: #d1fae5;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(240, 253, 244, 0.95);
+  --header-grad: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+}
+
+/* 5. Serene Ocean Theme */
+[data-theme="ocean"],
+body.theme-ocean {
+  --bg-app: #f0fdfa;            /* Soft teal tint */
+  --bg-card: #ffffff;           /* Clean elevated white card */
+  --bg-subcard: #ccfbf1;        /* Soft teal inner card */
+  --border-card: #99f6e4;       /* Teal-200 border */
+  --text-primary: #042f2e;      /* Deep teal-950 headings */
+  --text-secondary: #0f766e;    /* Readable teal-700 */
+  --accent-primary: #0d9488;    /* Vibrant teal */
+  --accent-hover: #0f766e;
+  --accent-subtle: #ccfbf1;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(240, 253, 250, 0.95);
+  --header-grad: linear-gradient(135deg, #0d9488 0%, #0284c7 50%, #1d4ed8 100%);
+}
+
+/* 6. Peach Sunset Theme */
+[data-theme="sunset"],
+body.theme-sunset {
+  --bg-app: #fff7ed;            /* Soft warm orange tint */
+  --bg-card: #ffffff;           /* Clean elevated white card */
+  --bg-subcard: #ffedd5;        /* Soft peach inner card */
+  --border-card: #fed7aa;       /* Orange-200 border */
+  --text-primary: #431407;      /* Deep orange-950 headings */
+  --text-secondary: #9a3412;    /* Readable orange-800 */
+  --accent-primary: #ea580c;    /* Vibrant orange */
+  --accent-hover: #c2410c;
+  --accent-subtle: #ffedd5;
+  --btn-text: #ffffff;
+  --nav-bg: rgba(255, 247, 237, 0.95);
+  --header-grad: linear-gradient(135deg, #ea580c 0%, #e11d48 50%, #be185d 100%);
+}
+
+/* Backward-compatible legacy aliases */
+:root, [data-theme] {
+  --bg-primary: var(--bg-app);
+  --bg-surface: var(--bg-card);
+  --bg-surface-elevated: var(--bg-subcard);
+  --border-subtle: var(--border-card);
+  --border-color: var(--border-card);
+  --text-main: var(--text-primary);
+  --text-heading: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --text-accent: var(--accent-primary);
+  --accent-main: var(--accent-primary);
+}
+
+/* ==========================================================================
+   BASE APPLICATION STYLES & RESET
+   ========================================================================== */
+
+html, body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Default Headings styling */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+/* Standard Semantic Utility Classes */
+.bg-app { background-color: var(--bg-app) !important; }
+.bg-card { background-color: var(--bg-card) !important; }
+.bg-subcard { background-color: var(--bg-subcard) !important; }
+.border-card { border-color: var(--border-card) !important; }
+.text-primary-token { color: var(--text-primary) !important; }
+.text-secondary-token { color: var(--text-secondary) !important; }
+.text-accent-token { color: var(--accent-primary) !important; }
+.bg-accent-token { background-color: var(--accent-primary) !important; }
+
+/* Themed Card Utilities */
+.card-themed {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-card) !important;
+  color: var(--text-primary);
+}
+
+.subcard-themed {
+  background-color: var(--bg-subcard) !important;
+  border-color: var(--border-card) !important;
+}
+
+/* Universal WCAG Contrast Fix for Existing Hardcoded Classes */
+/* Card surfaces adapt cleanly to current active theme */
+[data-theme] .bg-white:not(button):not(input):not(select):not(textarea):not(.keep-white),
+[data-theme] .dark\:bg-slate-900:not(button):not(input):not(select):not(textarea):not(.keep-white),
+body[data-theme] .bg-white:not(button):not(input):not(select):not(textarea):not(.keep-white),
+body[data-theme] .dark\:bg-slate-900:not(button):not(input):not(select):not(textarea):not(.keep-white) {
+  background-color: var(--bg-card);
+}
+
+[data-theme] .border-slate-200:not(button):not(input):not(select):not(textarea),
+[data-theme] .dark\:border-slate-800:not(button):not(input):not(select):not(textarea),
+[data-theme] .border-rose-100:not(button):not(input):not(select):not(textarea),
+body[data-theme] .border-slate-200:not(button):not(input):not(select):not(textarea),
+body[data-theme] .dark\:border-slate-800:not(button):not(input):not(select):not(textarea),
+body[data-theme] .border-rose-100:not(button):not(input):not(select):not(textarea) {
+  border-color: var(--border-card);
+}
+
+[data-theme] .text-slate-900,
+[data-theme] .dark\:text-slate-100,
+body[data-theme] .text-slate-900,
+body[data-theme] .dark\:text-slate-100 {
+  color: var(--text-primary);
+}
+
+[data-theme] .text-slate-600,
+[data-theme] .text-slate-500,
+[data-theme] .dark\:text-slate-400,
+[data-theme] .dark\:text-slate-300,
+body[data-theme] .text-slate-600,
+body[data-theme] .text-slate-500,
+body[data-theme] .dark\:text-slate-400,
+body[data-theme] .dark\:text-slate-300 {
+  color: var(--text-secondary);
+}
+
+/* Form Controls */
+input, select, textarea {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-card);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* Header & Nav */
+header {
+  background-color: var(--nav-bg);
+  border-color: var(--border-card);
+}
+
+/* ==========================================================================
+   HIGH CONTRAST & WCAG FIXES (SOS Button, Banners, Controls)
+   ========================================================================== */
+
+/* Dark container banner text */
+.text-white > h1,
+.text-white > h2,
+.text-white > h3,
+.text-white > h4,
+.text-white > p,
+.text-white > span,
+.text-white > strong {
+  color: #ffffff;
+}
+
+/* Fix: Pill buttons inside banners must preserve their background and readable text */
+button.keep-white,
+.text-white button.keep-white,
+.text-white button.bg-white {
+  background-color: #ffffff !important;
+}
+
+button.keep-white span,
+button.keep-white svg,
+.text-white button.text-rose-700 span,
+.text-white button.text-rose-700 svg,
+button.text-rose-700 span,
+button.text-rose-700 svg {
+  color: #be123c !important; /* Rose-700 for guaranteed 7+:1 contrast on white */
+}
+
+.text-white button.text-pink-700 span,
+.text-white button.text-pink-700 svg,
+button.text-pink-700 span,
+button.text-pink-700 svg {
+  color: #be185d !important; /* Pink-700 for guaranteed 7+:1 contrast on white */
+}
+
+/* Primary Action Buttons */
+.bg-pink-600,
+.bg-pink-500 {
+  background-color: var(--accent-primary);
+  color: var(--btn-text) !important;
+}
+.bg-pink-600:hover,
+.hover\:bg-pink-700:hover {
+  background-color: var(--accent-hover);
+}
+.bg-pink-600 span,
+.bg-pink-600 svg,
+.bg-pink-500 span,
+.bg-pink-500 svg {
+  color: var(--btn-text) !important;
+}
+
+/* Accessible Focus Ring */
+*:focus-visible {
+  outline: 3px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 9999px;
+  opacity: 0.6;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,0 +1,15 @@
+{
+  "name": "hci-project",
+  "private": true,
+  "version": "1.0.0",
+  "description": "FemCare - Women's Health & Wellness Application (Full-Stack Monorepo)",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "python -m uvicorn backend.main:app --port 8000 --reload",
+    "server": "python -m uvicorn backend.main:app --port 8000 --reload",
+    "build": "npm --prefix frontend run build",
+    "lint": "npm --prefix frontend run lint",
+    "preview": "npm --prefix frontend run preview"
+  }
+}
