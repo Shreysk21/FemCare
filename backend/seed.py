@@ -2,18 +2,99 @@ from sqlalchemy.orm import Session
 try:
     from .database import (
         UserProfile, Cycle, CycleFlowLog, SymptomLog, MoodLog,
-        HydrationLog, HydrationEntry, CircleMember
+        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog
     )
 except (ImportError, ValueError):
     from database import (
         UserProfile, Cycle, CycleFlowLog, SymptomLog, MoodLog,
-        HydrationLog, HydrationEntry, CircleMember
+        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog
     )
 
 def seed_initial_data(db: Session):
     existing_user = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
     if existing_user:
-        return  # Already seeded
+        # Check if new feature tables need initial demo data
+        if db.query(FeedbackSubmission).count() == 0:
+            fb1 = FeedbackSubmission(
+                id="fb_001",
+                user_id="usr_101",
+                category="user",
+                rating=5,
+                usability_feedback="The symptom and cycle tracking interface is very intuitive and peaceful. The cramp SOS button is wonderfully helpful.",
+                problems_encountered="",
+                suggestions="A quick widget or dark lavender theme would be lovely.",
+                comments="Highly recommend FemCare to my friends!",
+                is_verified=False,
+                status="Acknowledged"
+            )
+            fb2 = FeedbackSubmission(
+                id="fb_002",
+                user_id="usr_101",
+                category="doctor",
+                rating=5,
+                doctor_specialty="Obstetrics & Gynecology",
+                doctor_clinic_affiliation="Bay Area Women's Health Clinic",
+                clinical_presentation_feedback="The cycle phase breakdown and symptom recurrence insights align well with clinical observations. Non-diagnostic phrasing is appropriately used.",
+                comments="[Wellness Guidance]: Commendable focus on hydration and rest during the luteal phase.",
+                is_verified=False,
+                status="Submitted"
+            )
+            db.add_all([fb1, fb2])
+
+        if db.query(MigraineLog).count() == 0:
+            mig1 = MigraineLog(
+                id="mig_001",
+                user_id="usr_101",
+                date="2026-09-17",
+                duration_hours=3,
+                severity="Severe",
+                has_aura=True,
+                has_nausea=True,
+                sensitivity_light=True,
+                triggers="Poor Sleep, Stress",
+                medication_taken="Ibuprofen 400mg",
+                notes="Started in the afternoon with bright light sensitivity."
+            )
+            mig2 = MigraineLog(
+                id="mig_002",
+                user_id="usr_101",
+                date="2026-08-20",
+                duration_hours=2,
+                severity="Moderate",
+                has_aura=False,
+                has_nausea=False,
+                sensitivity_light=True,
+                triggers="Dehydration, Hormonal Shift",
+                medication_taken="Paracetamol 500mg",
+                notes="Coincided with cycle day 1 flow."
+            )
+            db.add_all([mig1, mig2])
+
+        if db.query(PcodLog).count() == 0:
+            pcod1 = PcodLog(
+                id="pcod_001",
+                user_id="usr_101",
+                date="2026-09-22",
+                severity="Moderate",
+                symptoms="Acne, Excessive Fatigue, Bloating",
+                flow_pattern="Delayed Flow (Day 32)",
+                triggers="Poor Sleep, High Sugar Diet",
+                notes="Noticed skin flare-ups and lethargy during late luteal window."
+            )
+            pcod2 = PcodLog(
+                id="pcod_002",
+                user_id="usr_101",
+                date="2026-08-25",
+                severity="Mild",
+                symptoms="Pelvic Heaviness, Mood Shifts",
+                flow_pattern="Spotting",
+                triggers="High Work Stress",
+                notes="Light spotting observed 2 days prior to expected cycle."
+            )
+            db.add_all([pcod1, pcod2])
+
+        db.commit()
+        return  # Rest of profile data already seeded
 
     # 1. User Profile
     user = UserProfile(

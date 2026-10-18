@@ -40,6 +40,9 @@ class UserProfile(Base):
     theme = Column(String, default="light")
     text_size = Column(String, default="normal")
     privacy_mode = Column(String, default="discreet")
+    language = Column(String, default="en")
+    track_pcod = Column(Boolean, default=False)
+    track_migraine = Column(Boolean, default=False)
     location_approved = Column(Boolean, default=True)
     city = Column(String, default="San Francisco, CA")
     joined_date = Column(String, default="2026-01-15")
@@ -50,6 +53,9 @@ class UserProfile(Base):
     moods = relationship("MoodLog", back_populates="user", cascade="all, delete-orphan")
     hydration_logs = relationship("HydrationLog", back_populates="user", cascade="all, delete-orphan")
     circle_members = relationship("CircleMember", back_populates="user", cascade="all, delete-orphan")
+    feedbacks = relationship("FeedbackSubmission", back_populates="user", cascade="all, delete-orphan")
+    migraine_logs = relationship("MigraineLog", back_populates="user", cascade="all, delete-orphan")
+    pcod_logs = relationship("PcodLog", back_populates="user", cascade="all, delete-orphan")
 
 
 class Cycle(Base):
@@ -164,6 +170,62 @@ class CircleMember(Base):
     user = relationship("UserProfile", back_populates="circle_members")
 
 
+class FeedbackSubmission(Base):
+    __tablename__ = "feedbacks"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
+    category = Column(String, nullable=False)  # "user" or "doctor"
+    rating = Column(Integer, nullable=False)  # 1 to 5
+    usability_feedback = Column(Text, nullable=True)
+    problems_encountered = Column(Text, nullable=True)
+    suggestions = Column(Text, nullable=True)
+    comments = Column(Text, nullable=True)
+    doctor_specialty = Column(String, nullable=True)
+    doctor_clinic_affiliation = Column(String, nullable=True)
+    clinical_presentation_feedback = Column(Text, nullable=True)
+    is_verified = Column(Boolean, default=False)  # Unverified until verified by system
+    status = Column(String, default="Submitted")  # "Submitted", "Under Review", "Acknowledged"
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="feedbacks")
+
+
+class MigraineLog(Base):
+    __tablename__ = "migraine_logs"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
+    date = Column(String, nullable=False)
+    duration_hours = Column(Integer, default=2)
+    severity = Column(String, default="Moderate")  # "Mild", "Moderate", "Severe"
+    has_aura = Column(Boolean, default=False)
+    has_nausea = Column(Boolean, default=False)
+    sensitivity_light = Column(Boolean, default=False)
+    triggers = Column(String, nullable=True)  # Comma separated e.g. "Poor Sleep, Stress"
+    medication_taken = Column(String, nullable=True)  # e.g. "Ibuprofen 400mg"
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="migraine_logs")
+
+
+class PcodLog(Base):
+    __tablename__ = "pcod_logs"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
+    date = Column(String, nullable=False)
+    severity = Column(String, default="Moderate")  # "Mild", "Moderate", "Severe"
+    symptoms = Column(String, nullable=True)  # Comma-separated: "Acne, Excessive Fatigue, Pelvic Heaviness"
+    flow_pattern = Column(String, nullable=True)  # "Irregular", "Delayed Flow", "Prolonged Flow", "Spotting", "Consistent"
+    triggers = Column(String, nullable=True)  # Comma-separated: "Poor Sleep, High Sugar Diet, High Stress"
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="pcod_logs")
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -173,3 +235,28 @@ def get_db():
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Lightweight schema auto-migration for SQLite / PostgreSQL
+    with engine.connect() as conn:
+        try:
+            # Check if columns exist in profiles table
+            from sqlalchemy import text
+            existing_cols = []
+            if "sqlite" in str(engine.url):
+                res = conn.execute(text("PRAGMA table_info(profiles)"))
+                existing_cols = [row[1] for row in res.fetchall()]
+            else:
+                res = conn.execute(text(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name = 'profiles'"
+                ))
+                existing_cols = [row[0] for row in res.fetchall()]
+
+            if "language" not in existing_cols:
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN language VARCHAR DEFAULT 'en'"))
+            if "track_pcod" not in existing_cols:
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN track_pcod BOOLEAN DEFAULT 0"))
+            if "track_migraine" not in existing_cols:
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN track_migraine BOOLEAN DEFAULT 0"))
+            conn.commit()
+        except Exception as e:
+            # Table might be freshly created or already up to date
+            pass

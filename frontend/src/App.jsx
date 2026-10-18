@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { ToastContainer } from './components/ToastContainer';
 import { CrampSosModal } from './components/CrampSosModal';
+import { SmartHealthAlertPopup } from './components/SmartHealthAlertPopup';
 
 import { OnboardingView } from './views/OnboardingView';
 import { AuthView } from './views/AuthView';
@@ -45,6 +46,7 @@ const MainContent = () => {
       </main>
 
       <CrampSosModal />
+      <SmartHealthAlertPopup />
       <BottomNav />
       <ToastContainer />
     </div>

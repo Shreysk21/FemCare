@@ -1,9 +1,19 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Bell, Shield, Eye, Lock, Check } from 'lucide-react';
+import { Bell, Shield, Eye, Lock, Check, Activity, AlertTriangle, AlertCircle, ShieldAlert, CheckCircle2, RefreshCw, ExternalLink, PhoneCall } from 'lucide-react';
 
 export const NotificationsView = () => {
-  const { privacyMode, setNotificationPrivacyMode, notificationPrefs, toggleNotificationPref } = useApp();
+  const {
+    privacyMode,
+    setNotificationPrivacyMode,
+    notificationPrefs,
+    toggleNotificationPref,
+    smartAlertData,
+    evaluateSmartHealthAlerts,
+    resetSmartAlertThrottles,
+    setCurrentView,
+    setActiveTrackTab
+  } = useApp();
 
   return (
     <div className="space-y-6 pb-24 animate-fade-in max-w-xl mx-auto px-4 pt-4">
@@ -115,6 +125,128 @@ export const NotificationsView = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* SMART HEALTH ALERTS PATTERN MONITORING */}
+      <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-pink-100 dark:bg-pink-950/80 border border-pink-300 dark:border-pink-800 text-pink-600 flex items-center justify-center">
+              <Activity className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                Smart Health Alerts
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Evidence-based pattern analysis across saved symptom records
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => evaluateSmartHealthAlerts()}
+            title="Check for pattern changes"
+            className="p-2 rounded-xl text-slate-400 hover:text-pink-600 hover:bg-pink-50 dark:hover:bg-slate-800 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Dynamic Status Display */}
+        {smartAlertData?.status === 'urgent' && (
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 space-y-2.5">
+            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 font-bold text-xs">
+              <ShieldAlert className="w-4 h-4 shrink-0 animate-pulse" />
+              <span>Emergency Warning Sign Detected</span>
+            </div>
+            <div className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
+              {smartAlertData.alert?.title}
+            </div>
+            <div className="text-xs text-rose-900 dark:text-rose-200 leading-relaxed">
+              {smartAlertData.alert?.message}
+            </div>
+            <div className="text-xs font-semibold text-rose-800 dark:text-rose-300 pt-1 border-t border-rose-200 dark:border-rose-900">
+              Action: {smartAlertData.alert?.recommendation}
+            </div>
+            <a
+              href="tel:112"
+              className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all text-center"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>Call Emergency Services (112 / 911)</span>
+            </a>
+          </div>
+        )}
+
+        {smartAlertData?.status === 'concerning' && (
+          <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 space-y-2.5">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 font-bold text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>Concerning Pattern Observed</span>
+            </div>
+            <div className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
+              {smartAlertData.alert?.title}
+            </div>
+            <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              {smartAlertData.alert?.message}
+            </div>
+            <div className="text-xs font-semibold text-slate-800 dark:text-slate-200 pt-1 border-t border-amber-200 dark:border-amber-900/40">
+              Suggested next step: {smartAlertData.alert?.recommendation}
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => {
+                  setCurrentView('track');
+                  if (smartAlertData.alert?.patternType === 'frequent_migraine') {
+                    setActiveTrackTab('conditions');
+                  } else {
+                    setActiveTrackTab('symptoms');
+                  }
+                }}
+                className="py-2 px-3 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Review Logged Symptoms</span>
+              </button>
+              <button
+                onClick={() => resetSmartAlertThrottles()}
+                className="py-2 px-3 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 rounded-xl transition-colors"
+              >
+                Reset Alert Popup
+              </button>
+            </div>
+          </div>
+        )}
+
+        {smartAlertData?.status === 'normal' && (
+          <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 space-y-1.5">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>Normal Baseline Pattern</span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              No concerning pain escalations, persistent symptoms, or emergency warning signs detected across your saved records ({smartAlertData.totalLogsEvaluated} total records analyzed).
+            </p>
+          </div>
+        )}
+
+        {(!smartAlertData || smartAlertData?.status === 'insufficient_data') && (
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1.5">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-bold text-xs">
+              <Activity className="w-4 h-4 shrink-0 text-pink-500" />
+              <span>Calibrating Personal Baseline</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Smart Health Alerts requires at least 3 saved symptom logs or 2 migraine logs to reliably identify trends and avoid generating false alerts.
+            </p>
+          </div>
+        )}
+
+        {/* Clinical Disclaimer */}
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center leading-normal pt-1">
+          {smartAlertData?.clinicalDisclaimer || "Non-diagnostic pattern observation based on user-logged records. Consult your clinician for medical evaluation."}
+        </p>
       </div>
 
     </div>

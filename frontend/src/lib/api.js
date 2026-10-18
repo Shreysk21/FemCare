@@ -159,6 +159,88 @@ export const api = {
     });
   },
 
+  // --- FEEDBACK & REVIEWS ---
+  async getMyFeedback() {
+    return request('/feedback/my');
+  },
+
+  async submitFeedback(feedbackData) {
+    return request('/feedback', {
+      method: 'POST',
+      body: JSON.stringify(feedbackData),
+    });
+  },
+
+  // --- SPECIAL HEALTH CONDITIONS (PCOD/PCOS & MIGRAINE) ---
+  async getMigraineLogs() {
+    return request('/conditions/migraine');
+  },
+
+  async addMigraineLog(migraineData) {
+    return request('/conditions/migraine', {
+      method: 'POST',
+      body: JSON.stringify(migraineData),
+    });
+  },
+
+  async updateMigraineLog(logId, migraineData) {
+    return request(`/conditions/migraine/${logId}`, {
+      method: 'PUT',
+      body: JSON.stringify(migraineData),
+    });
+  },
+
+  async deleteMigraineLog(logId) {
+    return request(`/conditions/migraine/${logId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getPcodLogs() {
+    return request('/conditions/pcod');
+  },
+
+  async addPcodLog(pcodData) {
+    return request('/conditions/pcod', {
+      method: 'POST',
+      body: JSON.stringify(pcodData),
+    });
+  },
+
+  async updatePcodLog(logId, pcodData) {
+    return request(`/conditions/pcod/${logId}`, {
+      method: 'PUT',
+      body: JSON.stringify(pcodData),
+    });
+  },
+
+  async deletePcodLog(logId) {
+    return request(`/conditions/pcod/${logId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async updateConditionPreferences({ trackPcod, trackMigraine }) {
+    return request('/conditions/preferences', {
+      method: 'PUT',
+      body: JSON.stringify({ trackPcod, trackMigraine }),
+    });
+  },
+
+  async getConditionsSummary() {
+    return request('/conditions/summary');
+  },
+
+  // --- SYMPTOM-BASED PREDICTIONS & INSIGHTS ---
+  async getPredictionInsights() {
+    return request('/predictions/insights');
+  },
+
+  // --- SMART HEALTH ALERTS ---
+  async getSmartHealthAlerts() {
+    return request('/predictions/smart-alerts');
+  },
+
   // --- HEALTH CHECK ---
   async checkHealth() {
     return request('/health');
