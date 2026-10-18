@@ -1,65 +1,78 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, X, Droplets, HeartPulse, Smile, Activity, Sparkles } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export const RadialFabMenu = () => {
   const {
     radialMenuOpen,
     setRadialMenuOpen,
-    addHydrationMl,
-    addSymptom,
-    addMoodLog,
     setCurrentView,
     setFsmLoggingModalOpen,
-    transitionFSM
+    transitionFSM,
+    setActiveTrackTab,
+    t
   } = useApp();
 
-  // Radial Menu Options: Equal Distance D = 88px, Target Width W = 56px
-  // Index of Difficulty ID = log2(2D/W) = log2(176/56) ≈ 1.65 bits
+  // Radial quick-action items positioned along an upper semi-circular arc (D = 90px)
   const actions = [
     {
       id: 'flow',
-      label: 'Log Flow',
+      label: t('fab.logPeriod', 'Log Period'),
       icon: '🩸',
       color: 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/40',
-      angle: -135, // Top-Left
+      angle: -160,
       onClick: () => {
         setRadialMenuOpen(false);
-        setFsmLoggingModalOpen(true);
-        transitionFSM('PROMPT_SYMPTOM', 'START_FLOW_LOG');
+        if (setActiveTrackTab) setActiveTrackTab('flow');
+        setCurrentView('track');
       }
     },
     {
-      id: 'cramps',
-      label: 'Log Cramps',
+      id: 'symptoms',
+      label: t('fab.logSymptoms', 'Log Symptoms'),
       icon: '🩺',
       color: 'bg-purple-500 hover:bg-purple-600 text-white shadow-purple-500/40',
-      angle: -45, // Top-Right
+      angle: -125,
       onClick: () => {
-        addSymptom('Abdominal Cramps', 'Pain & Discomfort', 'Moderate', 'Logged via Quick Radial Pie Menu');
         setRadialMenuOpen(false);
+        if (setActiveTrackTab) setActiveTrackTab('symptoms');
+        setCurrentView('track');
       }
     },
     {
       id: 'mood',
-      label: 'Log Mood',
+      label: t('fab.logMood', 'Log Mood'),
       icon: '😊',
       color: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/40',
-      angle: -175, // Far Left
+      angle: -90,
       onClick: () => {
-        addMoodLog({ id: 'happy', label: 'Happy & Energetic', emoji: '😊' }, 'Logged via Quick Radial Pie Menu');
         setRadialMenuOpen(false);
+        if (setActiveTrackTab) setActiveTrackTab('mood');
+        setCurrentView('track');
       }
     },
     {
-      id: 'water',
-      label: 'Add Water',
-      icon: '💧',
-      color: 'bg-teal-500 hover:bg-teal-600 text-white shadow-teal-500/40',
-      angle: 5, // Far Right
+      id: 'migraine',
+      label: t('fab.logMigraine', 'Log Migraine'),
+      icon: '⚡',
+      color: 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-indigo-500/40',
+      angle: -55,
       onClick: () => {
-        addHydrationMl(250);
         setRadialMenuOpen(false);
+        if (setActiveTrackTab) setActiveTrackTab('migraine');
+        setCurrentView('track');
+      }
+    },
+    {
+      id: 'pcod',
+      label: t('fab.logPcod', 'Log PCOD'),
+      icon: '🌸',
+      color: 'bg-pink-500 hover:bg-pink-600 text-white shadow-pink-500/40',
+      angle: -20,
+      onClick: () => {
+        setRadialMenuOpen(false);
+        if (setActiveTrackTab) setActiveTrackTab('pcod');
+        setCurrentView('track');
       }
     }
   ];
@@ -78,18 +91,9 @@ export const RadialFabMenu = () => {
 
           {/* Radial Container */}
           <div className="relative z-50 mb-14 flex items-center justify-center animate-scale-up">
-            
-            {/* Fitts' Law Math Explanation Badge */}
-            <div className="absolute -top-24 bg-purple-950/95 text-white text-[11px] px-3.5 py-1.5 rounded-full border border-purple-400/50 shadow-xl backdrop-blur-md flex items-center gap-2 whitespace-nowrap animate-bounce">
-              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-              <span>
-                Fitts' Law Optimised: <strong className="text-amber-300 font-mono">ID = log₂ (2D / W) = 1.6 bits</strong>
-              </span>
-            </div>
-
             {/* Radial Pie Wedges */}
             {actions.map((act) => {
-              const radius = 88; // Radial Distance D = 88px
+              const radius = 90; // Radial Distance D = 90px
               const rad = (act.angle * Math.PI) / 180;
               const x = Math.round(radius * Math.cos(rad));
               const y = Math.round(radius * Math.sin(rad));
@@ -104,7 +108,7 @@ export const RadialFabMenu = () => {
                 >
                   <button
                     onClick={act.onClick}
-                    className={`w-14 h-14 rounded-full ${act.color} shadow-lg flex items-center justify-center text-2xl transform transition-transform group-hover:scale-115 group-active:scale-95 border-2 border-white/80 dark:border-slate-800 focus:outline-none focus:ring-4 focus:ring-pink-400/50`}
+                    className={`w-14 h-14 rounded-full ${act.color} shadow-lg flex items-center justify-center text-2xl transform transition-transform group-hover:scale-115 group-active:scale-95 border-2 border-white/80 dark:border-slate-800 focus:outline-none focus:ring-4 focus:ring-pink-400/50 cursor-pointer`}
                     aria-label={act.label}
                   >
                     <span>{act.icon}</span>
@@ -122,11 +126,11 @@ export const RadialFabMenu = () => {
       {/* Main Floating Quick-Action Button (FAB) */}
       <button
         onClick={() => setRadialMenuOpen(!radialMenuOpen)}
-        className={`relative z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-pink-600 via-rose-500 to-purple-600 text-white shadow-xl shadow-pink-600/40 flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-pink-400 ${
+        className={`relative z-50 w-14 h-14 rounded-full bg-gradient-to-tr from-pink-600 via-rose-500 to-purple-600 text-white shadow-xl shadow-pink-600/40 flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-pink-400 cursor-pointer ${
           radialMenuOpen ? 'rotate-45 scale-110 ring-4 ring-purple-400/60' : 'hover:scale-110 active:scale-95'
         }`}
         aria-label="Toggle Quick Radial Logging Menu"
-        title="Fitts' Law Radial Quick Log Menu"
+        title="Quick Log Actions"
       >
         <Plus className="w-7 h-7 stroke-[3px]" />
       </button>

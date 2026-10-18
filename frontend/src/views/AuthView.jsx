@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Eye, EyeOff, Shield, ArrowRight, Lock, Mail, User as UserIcon } from 'lucide-react';
 
 export const AuthView = () => {
-  const { authSubView, setAuthSubView, setCurrentView } = useApp();
+  const { authSubView, setAuthSubView, setCurrentView, loginUser, returnViewAfterAuth } = useApp();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('shreya.patel@example.com');
   const [password, setPassword] = useState('●●●●●●●●');
@@ -11,7 +11,7 @@ export const AuthView = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setCurrentView('home');
+    loginUser(returnViewAfterAuth || 'home');
   };
 
   return (

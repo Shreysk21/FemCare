@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../lib/api';
 import {
+  getTranslation,
+  AVAILABLE_LANGUAGES,
+  formatLocalizedDate,
+  formatLocalizedNumber,
+  registerLanguage
+} from '../i18n/translations';
+import {
   INITIAL_USER_PROFILE,
   INITIAL_CYCLES,
   INITIAL_SYMPTOM_LOGS,
@@ -27,6 +34,18 @@ export const AppProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState('home'); // home, cycle, track, analytics, community, care, store, ai, notifications, profile
   const [authSubView, setAuthSubView] = useState('login'); 
   const [onboardingStep, setOnboardingStep] = useState(1);
+  const [activeTrackTab, setActiveTrackTab] = useState('symptoms');
+
+  // Authentication State & Session Continuity
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    try {
+      const saved = localStorage.getItem('femcare_auth');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+  const [returnViewAfterAuth, setReturnViewAfterAuth] = useState(null);
 
   // Live Backend & Loading States
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +113,62 @@ export const AppProvider = ({ children }) => {
   });
   const [textSize, setTextSize] = useState(INITIAL_USER_PROFILE.textSize);
   const [privacyMode, setPrivacyMode] = useState(INITIAL_USER_PROFILE.privacyMode);
+
+  // Multilingual State ('en' English, 'hi' Hindi)
+  const [language, setLanguageState] = useState(() => {
+    try {
+      return localStorage.getItem('femcare_language') || 'en';
+    } catch (e) {
+      return 'en';
+    }
+  });
+
+  const setLanguage = async (newLang) => {
+    setLanguageState(newLang);
+    try {
+      localStorage.setItem('femcare_language', newLang);
+      await api.updateProfile({ language: newLang });
+    } catch (e) {
+      console.warn('[AppContext] Language persistence notice:', e.message);
+    }
+  };
+
+  const t = useCallback((key, fallback = "") => {
+    return getTranslation(language, key, fallback);
+  }, [language]);
+
+  // Special Health Conditions State (PCOD/PCOS & Migraine)
+  const [trackPcod, setTrackPcod] = useState(false);
+  const [trackMigraine, setTrackMigraine] = useState(false);
+  const [pcodLogs, setPcodLogs] = useState([]);
+  const [migraineLogs, setMigraineLogs] = useState([]);
+  const [conditionsSummary, setConditionsSummary] = useState(null);
+
+  // Feedback & Review Submissions State
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  // Symptom-Based Predictions State
+  const [predictionInsights, setPredictionInsights] = useState(null);
+
+  // Smart Health Alerts State (Evidence-based pattern detection & throttling)
+  const [smartAlertData, setSmartAlertData] = useState(null);
+  const [activeSmartAlert, setActiveSmartAlert] = useState(null);
+  const [dismissedAlertSignatures, setDismissedAlertSignatures] = useState(() => {
+    try {
+      const saved = localStorage.getItem('femcare_dismissed_alerts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [urgentAcknowledgedSignatures, setUrgentAcknowledgedSignatures] = useState(() => {
+    try {
+      const saved = localStorage.getItem('femcare_urgent_acknowledged_alerts');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   
   // Privacy Shield Toggle (Blur sensitive details)
   const [privacyShield, setPrivacyShield] = useState(false);
@@ -134,21 +209,45 @@ export const AppProvider = ({ children }) => {
       setIsLoading(true);
       setApiError(null);
 
-      const [profileRes, cyclesRes, symptomsRes, moodsRes, hydrationRes, circleRes] =
-        await Promise.allSettled([
-          api.getProfile(),
-          api.getCycles(),
-          api.getSymptoms(),
-          api.getMoods(),
-          api.getHydration(),
-          api.getCircleMembers()
-        ]);
+      const [
+        profileRes,
+        cyclesRes,
+        symptomsRes,
+        moodsRes,
+        hydrationRes,
+        circleRes,
+        feedbackRes,
+        migraineRes,
+        pcodRes,
+        conditionsRes,
+        predictionsRes,
+        smartAlertsRes
+      ] = await Promise.allSettled([
+        api.getProfile(),
+        api.getCycles(),
+        api.getSymptoms(),
+        api.getMoods(),
+        api.getHydration(),
+        api.getCircleMembers(),
+        api.getMyFeedback(),
+        api.getMigraineLogs(),
+        api.getPcodLogs(),
+        api.getConditionsSummary(),
+        api.getPredictionInsights(),
+        api.getSmartHealthAlerts()
+      ]);
 
       if (profileRes.status === 'fulfilled' && profileRes.value) {
         setUser(profileRes.value);
         if (profileRes.value.theme) setTheme(profileRes.value.theme);
         if (profileRes.value.textSize) setTextSize(profileRes.value.textSize);
         if (profileRes.value.privacyMode) setPrivacyMode(profileRes.value.privacyMode);
+        if (profileRes.value.language) {
+          setLanguageState(profileRes.value.language);
+          try { localStorage.setItem('femcare_language', profileRes.value.language); } catch (e) {}
+        }
+        setTrackPcod(Boolean(profileRes.value.trackPcod));
+        setTrackMigraine(Boolean(profileRes.value.trackMigraine));
       }
       if (cyclesRes.status === 'fulfilled' && Array.isArray(cyclesRes.value) && cyclesRes.value.length > 0) {
         setCycles(cyclesRes.value);
@@ -164,6 +263,50 @@ export const AppProvider = ({ children }) => {
       }
       if (circleRes.status === 'fulfilled' && Array.isArray(circleRes.value) && circleRes.value.length > 0) {
         setCircleMembers(circleRes.value);
+      }
+      if (feedbackRes.status === 'fulfilled' && Array.isArray(feedbackRes.value)) {
+        setFeedbacks(feedbackRes.value);
+      }
+      if (migraineRes.status === 'fulfilled' && Array.isArray(migraineRes.value)) {
+        setMigraineLogs(migraineRes.value);
+      }
+      if (pcodRes.status === 'fulfilled' && Array.isArray(pcodRes.value)) {
+        setPcodLogs(pcodRes.value);
+      }
+      if (conditionsRes.status === 'fulfilled' && conditionsRes.value) {
+        setConditionsSummary(conditionsRes.value);
+      }
+      if (predictionsRes.status === 'fulfilled' && predictionsRes.value) {
+        setPredictionInsights(predictionsRes.value);
+      }
+      if (smartAlertsRes.status === 'fulfilled' && smartAlertsRes.value) {
+        const alertRes = smartAlertsRes.value;
+        setSmartAlertData(alertRes);
+        if (alertRes.hasAlert && alertRes.alert) {
+          const sig = alertRes.alert.signature;
+          let dismissed = [];
+          let urgentAcked = [];
+          try {
+            dismissed = JSON.parse(localStorage.getItem('femcare_dismissed_alerts') || '[]');
+            urgentAcked = JSON.parse(localStorage.getItem('femcare_urgent_acknowledged_alerts') || '[]');
+          } catch (e) {}
+
+          if (alertRes.alert.level === 'urgent') {
+            if (!urgentAcked.includes(sig)) {
+              setActiveSmartAlert(alertRes.alert);
+            } else {
+              setActiveSmartAlert(null);
+            }
+          } else if (alertRes.alert.level === 'concerning') {
+            if (!dismissed.includes(sig)) {
+              setActiveSmartAlert(alertRes.alert);
+            } else {
+              setActiveSmartAlert(null);
+            }
+          }
+        } else {
+          setActiveSmartAlert(null);
+        }
       }
     } catch (err) {
       console.warn('[AppContext] Backend synchronization notice:', err.message);
@@ -415,6 +558,44 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // User Authentication Lifecycle Actions
+  const loginUser = (targetView) => {
+    setIsLoggedIn(true);
+    try { localStorage.setItem('femcare_auth', 'true'); } catch (e) {}
+    showToast(`Welcome back, ${user.name || 'Shreya'}! 🌸`);
+    const destination = targetView || returnViewAfterAuth || 'home';
+    setReturnViewAfterAuth(null);
+    setCurrentView(destination);
+  };
+
+  const logoutUser = () => {
+    setIsLoggedIn(false);
+    try { localStorage.setItem('femcare_auth', 'false'); } catch (e) {}
+    showToast("Signed out safely", null, "🔒");
+    setAuthSubView('login');
+    setCurrentView('auth');
+  };
+
+  const requireAuth = (callback, returnView) => {
+    if (isLoggedIn) {
+      if (typeof callback === 'function') callback();
+    } else {
+      setReturnViewAfterAuth(returnView || currentView);
+      setAuthSubView('login');
+      setCurrentView('auth');
+      showToast("Please sign in to access this feature", null, "🔒");
+    }
+  };
+
+  // Locale-sensitive formatting utilities
+  const formatDate = useCallback((date, options) => {
+    return formatLocalizedDate(date, language, options);
+  }, [language]);
+
+  const formatNumber = useCallback((num) => {
+    return formatLocalizedNumber(num, language);
+  }, [language]);
+
   // --- ACTIONS WITH PERSISTENT BACKEND SYNC ---
 
   // Period Logging Action with optional Mood & Symptoms
@@ -464,6 +645,8 @@ export const AppProvider = ({ children }) => {
       if (savedCycle) {
         setCycles(prev => prev.map(c => c.id === savedCycle.id ? savedCycle : c));
       }
+      refreshPredictionInsights();
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
     } catch (err) {
       console.warn('[AppContext] API fallback for period logging:', err.message);
     }
@@ -489,6 +672,8 @@ export const AppProvider = ({ children }) => {
 
     try {
       await api.deleteCycleFlow(cycleId, dateToDelete);
+      refreshPredictionInsights();
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
     } catch (err) {
       console.warn('[AppContext] API fallback for delete period entry:', err.message);
     }
@@ -562,6 +747,8 @@ export const AppProvider = ({ children }) => {
       if (saved) {
         setSymptomLogs(prev => prev.map(s => s.id === tempId ? saved : s));
       }
+      refreshPredictionInsights();
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
     } catch (err) {
       console.warn('[AppContext] API fallback for add symptom:', err.message);
     }
@@ -574,6 +761,7 @@ export const AppProvider = ({ children }) => {
 
     try {
       await api.updateSymptom(symptomId, { severity: updatedSeverity, notes: updatedNotes });
+      refreshPredictionInsights();
     } catch (err) {
       console.warn('[AppContext] API fallback for update symptom:', err.message);
     }
@@ -586,6 +774,7 @@ export const AppProvider = ({ children }) => {
 
     try {
       await api.deleteSymptom(symptomId);
+      refreshPredictionInsights();
     } catch (err) {
       console.warn('[AppContext] API fallback for delete symptom:', err.message);
     }
@@ -811,6 +1000,199 @@ export const AppProvider = ({ children }) => {
     showToast(`Order placed successfully! Order #${newOrder.id} 🎉`);
   };
 
+  // --- SMART HEALTH ALERTS ACTIONS (Unit 6 Intelligent Assistance) ---
+
+  const evaluateSmartHealthAlerts = useCallback(async () => {
+    try {
+      const res = await api.getSmartHealthAlerts();
+      if (res) {
+        setSmartAlertData(res);
+        if (res.hasAlert && res.alert) {
+          const sig = res.alert.signature;
+          let dismissed = [];
+          let urgentAcked = [];
+          try {
+            dismissed = JSON.parse(localStorage.getItem('femcare_dismissed_alerts') || '[]');
+            urgentAcked = JSON.parse(localStorage.getItem('femcare_urgent_acknowledged_alerts') || '[]');
+          } catch (e) {}
+
+          if (res.alert.level === 'urgent') {
+            if (!urgentAcked.includes(sig)) {
+              setActiveSmartAlert(res.alert);
+            } else {
+              setActiveSmartAlert(null);
+            }
+          } else if (res.alert.level === 'concerning') {
+            if (!dismissed.includes(sig)) {
+              setActiveSmartAlert(res.alert);
+            } else {
+              setActiveSmartAlert(null);
+            }
+          } else {
+            setActiveSmartAlert(null);
+          }
+        } else {
+          setActiveSmartAlert(null);
+        }
+      }
+    } catch (err) {
+      console.warn('[AppContext] Smart alerts evaluation notice:', err.message);
+    }
+  }, []);
+
+  const dismissSmartAlert = (signature) => {
+    const sig = signature || activeSmartAlert?.signature;
+    if (sig) {
+      setDismissedAlertSignatures(prev => {
+        const next = prev.includes(sig) ? prev : [...prev, sig];
+        try { localStorage.setItem('femcare_dismissed_alerts', JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+    }
+    setActiveSmartAlert(null);
+    showToast(t('smartAlerts.dismissToast', "Alert dismissed. Your health records remain saved and unchanged."));
+  };
+
+  const acknowledgeUrgentAlert = (signature) => {
+    const sig = signature || activeSmartAlert?.signature;
+    if (sig) {
+      setUrgentAcknowledgedSignatures(prev => {
+        const next = prev.includes(sig) ? prev : [...prev, sig];
+        try { localStorage.setItem('femcare_urgent_acknowledged_alerts', JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+    }
+    setActiveSmartAlert(null);
+    showToast("Urgent guidance acknowledged. Please seek medical evaluation promptly.", null, "🏥");
+  };
+
+  const resetSmartAlertThrottles = () => {
+    setDismissedAlertSignatures([]);
+    setUrgentAcknowledgedSignatures([]);
+    try {
+      localStorage.removeItem('femcare_dismissed_alerts');
+      localStorage.removeItem('femcare_urgent_acknowledged_alerts');
+    } catch (e) {}
+    evaluateSmartHealthAlerts();
+  };
+
+  // --- ENHANCEMENT ACTIONS ---
+
+  const refreshPredictionInsights = async () => {
+    try {
+      const data = await api.getPredictionInsights();
+      if (data) setPredictionInsights(data);
+      await evaluateSmartHealthAlerts();
+    } catch (err) {
+      console.warn('[AppContext] Failed to refresh predictions:', err.message);
+    }
+  };
+
+  const submitFeedbackAction = async (feedbackData) => {
+    try {
+      const res = await api.submitFeedback(feedbackData);
+      setFeedbacks(prev => [res, ...prev]);
+      showToast(t('feedback.successToast', "Thank you! Your feedback has been recorded securely 💌"));
+      return res;
+    } catch (err) {
+      showToast(err.message || "Failed to submit feedback", null, "⚠️");
+      throw err;
+    }
+  };
+
+  const addMigraineAction = async (migraineData) => {
+    try {
+      const res = await api.addMigraineLog(migraineData);
+      setMigraineLogs(prev => [res, ...prev]);
+      showToast("Migraine episode logged ⚡");
+      refreshPredictionInsights();
+      return res;
+    } catch (err) {
+      showToast(err.message || "Failed to log migraine", null, "⚠️");
+      throw err;
+    }
+  };
+
+  const deleteMigraineAction = async (logId) => {
+    setMigraineLogs(prev => prev.filter(m => m.id !== logId));
+    showToast("Migraine log removed");
+    try {
+      await api.deleteMigraineLog(logId);
+      refreshPredictionInsights();
+    } catch (err) {
+      console.warn('[AppContext] Delete migraine fallback:', err.message);
+    }
+  };
+
+  const updateConditionPreferencesAction = async (prefs) => {
+    if (prefs.trackPcod !== undefined) setTrackPcod(prefs.trackPcod);
+    if (prefs.trackMigraine !== undefined) setTrackMigraine(prefs.trackMigraine);
+    showToast("Special conditions preferences updated 🌸");
+    try {
+      await api.updateConditionPreferences(prefs);
+      const sum = await api.getConditionsSummary();
+      if (sum) setConditionsSummary(sum);
+    } catch (err) {
+      console.warn('[AppContext] Update condition prefs fallback:', err.message);
+    }
+  };
+
+  // PCOD / PCOS Observational CRUD Actions
+  const addPcodLogAction = async (pcodData) => {
+    try {
+      const res = await api.addPcodLog(pcodData);
+      setPcodLogs(prev => [res, ...prev]);
+      showToast("PCOD/PCOS observation recorded 🌸");
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
+      refreshPredictionInsights();
+      return res;
+    } catch (err) {
+      showToast(err.message || "Failed to record PCOD log", null, "⚠️");
+      throw err;
+    }
+  };
+
+  const updatePcodLogAction = async (logId, pcodData) => {
+    try {
+      const res = await api.updatePcodLog(logId, pcodData);
+      setPcodLogs(prev => prev.map(p => p.id === logId ? res : p));
+      showToast("PCOD observation updated 🌸");
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
+      refreshPredictionInsights();
+      return res;
+    } catch (err) {
+      showToast(err.message || "Failed to update PCOD log", null, "⚠️");
+      throw err;
+    }
+  };
+
+  const deletePcodLogAction = async (logId) => {
+    setPcodLogs(prev => prev.filter(p => p.id !== logId));
+    showToast("PCOD observation removed", null, "🗑️");
+    try {
+      await api.deletePcodLog(logId);
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
+      refreshPredictionInsights();
+    } catch (err) {
+      console.warn('[AppContext] Delete PCOD log fallback:', err.message);
+    }
+  };
+
+  // Migraine Update Action
+  const updateMigraineAction = async (logId, migraineData) => {
+    try {
+      const res = await api.updateMigraineLog(logId, migraineData);
+      setMigraineLogs(prev => prev.map(m => m.id === logId ? res : m));
+      showToast("Migraine episode updated ⚡");
+      api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
+      refreshPredictionInsights();
+      return res;
+    } catch (err) {
+      showToast(err.message || "Failed to update migraine episode", null, "⚠️");
+      throw err;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -827,6 +1209,60 @@ export const AppProvider = ({ children }) => {
         apiError,
         refreshBackendData,
         updateUserProfile,
+
+        // Multilingual Support
+        language,
+        setLanguage,
+        t,
+
+        // Special Health Conditions (PCOD/PCOS & Migraine)
+        trackPcod,
+        setTrackPcod,
+        trackMigraine,
+        setTrackMigraine,
+        pcodLogs,
+        migraineLogs,
+        conditionsSummary,
+        addPcodLog: addPcodLogAction,
+        updatePcodLog: updatePcodLogAction,
+        deletePcodLog: deletePcodLogAction,
+        addMigraineLog: addMigraineAction,
+        updateMigraineLog: updateMigraineAction,
+        deleteMigraineLog: deleteMigraineAction,
+        updateConditionPreferences: updateConditionPreferencesAction,
+
+        // Authentication & Session
+        isLoggedIn,
+        loginUser,
+        logoutUser,
+        requireAuth,
+        returnViewAfterAuth,
+
+        // Quick Tracking Navigation
+        activeTrackTab,
+        setActiveTrackTab,
+
+        // Localized Formatting & Registration
+        formatDate,
+        formatNumber,
+        AVAILABLE_LANGUAGES,
+        registerLanguage,
+
+        // Feedback & Reviews
+        feedbacks,
+        submitFeedback: submitFeedbackAction,
+
+        // Symptom-Based Predictions & Insights
+        predictionInsights,
+        refreshPredictionInsights,
+
+        // Smart Health Alerts (Evidence-based pattern monitoring)
+        smartAlertData,
+        activeSmartAlert,
+        evaluateSmartHealthAlerts,
+        dismissSmartAlert,
+        acknowledgeUrgentAlert,
+        resetSmartAlertThrottles,
 
         // Data
         user,
@@ -945,6 +1381,7 @@ export const AppProvider = ({ children }) => {
       {children}
     </AppContext.Provider>
   );
+
 };
 
 export const useApp = () => useContext(AppContext);

@@ -22,7 +22,10 @@ try:
         symptoms,
         moods,
         hydration,
-        circle_care
+        circle_care,
+        feedback,
+        conditions,
+        predictions
     )
 except (ImportError, ValueError):
     from database import init_db, SessionLocal
@@ -33,7 +36,10 @@ except (ImportError, ValueError):
         symptoms,
         moods,
         hydration,
-        circle_care
+        circle_care,
+        feedback,
+        conditions,
+        predictions
     )
 
 @asynccontextmanager
@@ -78,6 +84,9 @@ app.include_router(symptoms.router)
 app.include_router(moods.router)
 app.include_router(hydration.router)
 app.include_router(circle_care.router)
+app.include_router(feedback.router)
+app.include_router(conditions.router)
+app.include_router(predictions.router)
 
 @app.get("/")
 def root():

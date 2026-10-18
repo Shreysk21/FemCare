@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ShoppingBag, Palette, Bot, User, Eye, EyeOff, HeartHandshake } from 'lucide-react';
+import { ShoppingBag, Palette, Bot, User, Eye, EyeOff, HeartHandshake, Languages, Bell } from 'lucide-react';
 import { Modal } from './Modal';
 import { FsmLoggingModal } from './FsmLoggingModal';
 
@@ -13,7 +13,11 @@ export const Navbar = () => {
     cart,
     privacyShield,
     togglePrivacyShield,
-    isLoading
+    isLoading,
+    language,
+    setLanguage,
+    smartAlertData,
+    t
   } = useApp();
 
   const [themeModalOpen, setThemeModalOpen] = useState(false);
@@ -47,7 +51,7 @@ export const Navbar = () => {
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-pink-600 via-rose-500 to-teal-600 bg-clip-text text-transparent leading-none">
-                  FemCare
+                  {t('nav.appName', 'FemCare')}
                 </h1>
                 {isLoading ? (
                   <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" title="Syncing with database..." />
@@ -56,7 +60,7 @@ export const Navbar = () => {
                 )}
               </div>
               <p className="text-[9px] font-bold text-[var(--text-secondary)] tracking-wider uppercase flex items-center gap-1 mt-0.5">
-                <span>Women's Health & Wellness</span>
+                <span>{t('nav.subtitle', "Women's Health & Wellness")}</span>
               </p>
             </div>
           </div>
@@ -64,6 +68,19 @@ export const Navbar = () => {
           {/* Clean Utility Action Group */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             
+            {/* Language Switcher Button (1-Tap Toggle between English & Hindi) */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'hi' : 'en')}
+              className="px-2.5 py-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center gap-1 text-xs font-bold shadow-2xs hover:scale-105 active:scale-95"
+              title={language === 'en' ? "हिन्दी में बदलें (Switch to Hindi)" : "Switch to English"}
+              aria-label="Toggle Language"
+            >
+              <Languages className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
+              <span className="text-[11px] font-extrabold text-pink-600 dark:text-pink-400">
+                {language === 'en' ? 'हिन्दी' : 'EN'}
+              </span>
+            </button>
+
             {/* Circle Care Partner Sync Header Access */}
             <button
               onClick={() => setCurrentView('support')}
@@ -76,7 +93,7 @@ export const Navbar = () => {
               aria-label="Circle Care Partner Sync"
             >
               <HeartHandshake className="w-4 h-4 text-pink-600 dark:text-pink-400" />
-              <span className="text-[11px] font-bold hidden md:inline">Circle</span>
+              <span className="text-[11px] font-bold hidden md:inline">{t('nav.circle', 'Circle')}</span>
             </button>
 
             {/* Privacy Shield Toggle */}
@@ -96,7 +113,7 @@ export const Navbar = () => {
                 <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               )}
               <span className="text-[11px] font-bold hidden sm:inline">
-                {privacyShield ? 'Shield ON' : 'Privacy'}
+                {privacyShield ? t('nav.shieldOn', 'Shield ON') : t('nav.privacy', 'Privacy')}
               </span>
             </button>
 
@@ -130,6 +147,23 @@ export const Navbar = () => {
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-pink-600 text-white text-[9px] font-bold flex items-center justify-center">
                   {cartTotalItems}
                 </span>
+              )}
+            </button>
+
+            {/* Notifications & Smart Alerts Button */}
+            <button
+              onClick={() => setCurrentView('notifications')}
+              className={`p-2 rounded-full border transition-all relative ${
+                currentView === 'notifications'
+                  ? 'bg-pink-100 dark:bg-pink-950 border-pink-400 text-pink-600 dark:text-pink-300'
+                  : 'border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] hover:bg-slate-100'
+              }`}
+              title="Notifications & Smart Alerts"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+              {smartAlertData?.hasAlert && (
+                <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${smartAlertData.status === 'urgent' ? 'bg-rose-600 animate-ping' : 'bg-amber-500'}`} />
               )}
             </button>
 

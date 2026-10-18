@@ -22,7 +22,11 @@ export const HomeDashboard = () => {
     setHomePhaseMode,
     setCrampSosModalOpen,
     privacyShield,
-    showToast
+    showToast,
+    t,
+    predictionInsights,
+    trackPcod,
+    trackMigraine
   } = useApp();
 
   const [quickLogModal, setQuickLogModal] = useState(null); // 'period', 'mood', 'symptom'
@@ -41,10 +45,16 @@ export const HomeDashboard = () => {
   const diffTime = Math.abs(today - start);
   const cycleDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-  // Dynamic Next Period Estimation
+  // Dynamic Next Period Estimation (Informed by symptom algorithms or recorded cycle length)
   const nextDateCalc = new Date(start);
-  nextDateCalc.setDate(start.getDate() + (currentCycle.length || 28));
-  const nextPeriodDate = nextDateCalc.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+  const cycleLen = predictionInsights?.estimatedCycleLength || predictionInsights?.estimatedCycleLengthDays || currentCycle.length || 28;
+  nextDateCalc.setDate(start.getDate() + cycleLen);
+  const fallbackPeriodDate = nextDateCalc.toLocaleDateString('en-US', { day: 'numeric', month: 'long' });
+  const rawEstDate = predictionInsights?.nextPeriodEstimatedDate || predictionInsights?.nextEstimatedPeriodDate;
+  const displayNextPeriodDate = rawEstDate 
+    ? new Date(rawEstDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long' })
+    : fallbackPeriodDate;
+
   const todaySleep = sleepLogs[0] || { hours: 7, minutes: 20, quality: 'Good' };
   const todayActivity = activityLogs[0] || { steps: 5400, stepGoal: 8000 };
 
@@ -62,14 +72,14 @@ export const HomeDashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <span>Good morning, {user.name.split(' ')[0]}</span>
+            <span>{t('dashboard.greeting', 'Good morning')}, {user.name.split(' ')[0]}</span>
             <span className="animate-bounce">🌸</span>
           </h2>
           <p className="text-xs font-semibold mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
-            <span>Cycle Day <strong className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>{cycleDay}</strong></span>
+            <span>{t('dashboard.cycleDay', 'Cycle Day')} <strong className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>{cycleDay}</strong></span>
             <span>•</span>
             <span className="font-bold" style={{ color: 'var(--accent-primary)' }}>
-              {homePhaseMode === 'menstrual' ? 'Menstrual Phase 🩸' : 'Follicular Phase 🌱'}
+              {homePhaseMode === 'menstrual' ? t('dashboard.menstrualPhase', 'Menstrual Phase 🩸') : t('dashboard.follicularPhase', 'Follicular Phase 🌱')}
             </span>
           </p>
         </div>
@@ -108,9 +118,9 @@ export const HomeDashboard = () => {
             <Flame className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
             <span>One-Tap Pain Relief</span>
           </div>
-          <h3 className="text-base font-extrabold tracking-tight text-white">Period Cramp SOS 🆘</h3>
+          <h3 className="text-base font-extrabold tracking-tight text-white">{t('dashboard.crampSosTitle', 'Period Cramp SOS 🆘')}</h3>
           <p className="text-[11px] text-pink-100 opacity-90 leading-tight">
-            20-min heat pad timer, 4-7-8 calming breathing & fast pain logging
+            {t('dashboard.crampSosSub', '20-min heat pad timer, 4-7-8 calming breathing & fast pain logging')}
           </p>
         </div>
 
@@ -119,7 +129,7 @@ export const HomeDashboard = () => {
           className="px-4 py-2.5 bg-white hover:bg-rose-50 font-black rounded-2xl shadow-md transition-all shrink-0 hover:scale-105 active:scale-95 text-xs flex items-center gap-1.5 keep-white"
           style={{ backgroundColor: '#ffffff', color: '#be123c' }}
         >
-          <span className="font-black" style={{ color: '#be123c' }}>Open SOS</span>
+          <span className="font-black" style={{ color: '#be123c' }}>{t('dashboard.openSos', 'Open SOS')}</span>
           <ArrowRight className="w-4 h-4 stroke-[2.5px]" style={{ color: '#be123c' }} />
         </button>
       </div>
@@ -127,12 +137,38 @@ export const HomeDashboard = () => {
       {/* PHASE-BASED DAILY ENERGY INSIGHT CARD (Requirement 3B) */}
       <PhaseEnergyCard />
 
+      {/* Active Condition Quick Badges (Requirement 3) */}
+      {(trackPcod || trackMigraine) && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {trackPcod && (
+            <button
+              onClick={() => setCurrentView('track')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all hover:scale-102"
+              style={{ backgroundColor: 'var(--bg-subcard)', borderColor: 'var(--border-card)', color: 'var(--accent-primary)' }}
+            >
+              <span>🌸</span>
+              <span>PCOD / PCOS Active</span>
+            </button>
+          )}
+          {trackMigraine && (
+            <button
+              onClick={() => setCurrentView('track')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all hover:scale-102"
+              style={{ backgroundColor: 'var(--bg-subcard)', borderColor: 'var(--border-card)', color: '#d97706' }}
+            >
+              <span>⚡</span>
+              <span>Migraine Log Active</span>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ROTATING EMPOWERMENT QUOTE CARD */}
       <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-rose-100 dark:border-slate-800 shadow-sm relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
           <span className="flex items-center gap-1.5">
             <Quote className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            <span>Daily Inspiration</span>
+            <span>{t('dashboard.dailyInspiration', 'Daily Inspiration')}</span>
           </span>
           <button
             onClick={nextQuote}
@@ -141,7 +177,7 @@ export const HomeDashboard = () => {
             aria-label="New empowerment quote"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>New Quote</span>
+            <span>{t('dashboard.newQuote', 'New Quote')}</span>
           </button>
         </div>
 
@@ -159,7 +195,7 @@ export const HomeDashboard = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-pink-100 opacity-90">
-              Cycle Overview
+              {t('dashboard.cycleOverview', 'Cycle Overview')}
             </span>
             <h3 className={`text-3xl font-extrabold mt-0.5 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>
               Day {cycleDay}
@@ -178,21 +214,21 @@ export const HomeDashboard = () => {
             />
           </div>
           <div className="flex justify-between text-xs font-medium text-pink-100 opacity-90">
-            <span>Day 1 (Period)</span>
-            <span>Day 14 (Ovulation)</span>
-            <span>Day 28</span>
+            <span>{t('dashboard.day1Period', 'Day 1 (Period)')}</span>
+            <span>{t('dashboard.day14Ovulation', 'Day 14 (Ovulation)')}</span>
+            <span>{t('dashboard.day28Cycle', 'Day 28')}</span>
           </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-white/20 flex items-center justify-between text-xs font-medium">
-          <span>Next period expected: <strong className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>{nextPeriodDate}</strong></span>
+          <span>{t('dashboard.nextPeriodExpected', 'Next period expected:')} <strong className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>{displayNextPeriodDate}</strong></span>
           <button
             onClick={() => setCurrentView('cycle')}
             className="px-3.5 py-1.5 bg-white hover:bg-pink-50 font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1 keep-white cursor-pointer"
             style={{ backgroundColor: '#ffffff', color: '#be185d' }}
             aria-label="View cycle calendar"
           >
-            <span style={{ color: '#be185d' }}>View Calendar</span>
+            <span style={{ color: '#be185d' }}>{t('dashboard.viewCalendar', 'View Calendar')}</span>
             <ArrowRight className="w-3.5 h-3.5 stroke-[2.5px]" style={{ color: '#be185d' }} />
           </button>
         </div>

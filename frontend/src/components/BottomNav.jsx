@@ -4,20 +4,20 @@ import { Home, Activity, BarChart2, Users } from 'lucide-react';
 import { RadialFabMenu } from './RadialFabMenu';
 
 export const BottomNav = () => {
-  const { currentView, setCurrentView } = useApp();
+  const { currentView, setCurrentView, t } = useApp();
 
   if (currentView === 'onboarding' || currentView === 'auth') {
     return null;
   }
 
   const leftNavItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'track', label: 'Log & Track', icon: Activity },
+    { id: 'home', label: t('nav.home', 'Home'), icon: Home },
+    { id: 'track', label: t('nav.track', 'Log & Track'), icon: Activity },
   ];
 
   const rightNavItems = [
-    { id: 'analytics', label: 'Insights', icon: BarChart2 },
-    { id: 'support', label: 'Support', icon: Users },
+    { id: 'analytics', label: t('nav.insights', 'Insights'), icon: BarChart2 },
+    { id: 'support', label: t('nav.support', 'Support'), icon: Users },
   ];
 
   return (
@@ -67,7 +67,7 @@ export const BottomNav = () => {
           <div className="flex items-center gap-4">
             {rightNavItems.map((item) => {
               const IconComponent = item.icon;
-              const isActive = currentView === item.id || (item.id === 'support' && (currentView === 'community' || currentView === 'care'));
+              const isActive = currentView === item.id || (item.id === 'support' && (currentView === 'community' || currentView === 'care' || currentView === 'circle'));
               return (
                 <button
                   key={item.id}

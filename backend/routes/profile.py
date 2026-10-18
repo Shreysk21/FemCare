@@ -24,6 +24,9 @@ def get_profile(db: Session = Depends(get_db)):
         theme=profile.theme,
         textSize=profile.text_size,
         privacyMode=profile.privacy_mode,
+        language=getattr(profile, "language", "en") or "en",
+        trackPcod=bool(getattr(profile, "track_pcod", False)),
+        trackMigraine=bool(getattr(profile, "track_migraine", False)),
         locationApproved=profile.location_approved,
         city=profile.city,
         joinedDate=profile.joined_date
@@ -52,6 +55,12 @@ def update_profile(update_data: UserProfileUpdate, db: Session = Depends(get_db)
         profile.text_size = update_data.textSize
     if update_data.privacyMode is not None:
         profile.privacy_mode = update_data.privacyMode
+    if update_data.language is not None:
+        profile.language = update_data.language
+    if update_data.trackPcod is not None:
+        profile.track_pcod = update_data.trackPcod
+    if update_data.trackMigraine is not None:
+        profile.track_migraine = update_data.trackMigraine
     if update_data.locationApproved is not None:
         profile.location_approved = update_data.locationApproved
     if update_data.city is not None:
@@ -70,7 +79,11 @@ def update_profile(update_data: UserProfileUpdate, db: Session = Depends(get_db)
         theme=profile.theme,
         textSize=profile.text_size,
         privacyMode=profile.privacy_mode,
+        language=getattr(profile, "language", "en") or "en",
+        trackPcod=bool(getattr(profile, "track_pcod", False)),
+        trackMigraine=bool(getattr(profile, "track_migraine", False)),
         locationApproved=profile.location_approved,
         city=profile.city,
         joinedDate=profile.joined_date
     )
+
