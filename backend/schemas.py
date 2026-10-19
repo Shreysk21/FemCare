@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union
+from datetime import date
 from pydantic import BaseModel, Field
 
 # --- User Profile Schemas ---
@@ -8,7 +9,7 @@ class UserProfileUpdate(BaseModel):
     email: Optional[str] = None
     avgCycleLength: Optional[int] = None
     avgPeriodDuration: Optional[int] = None
-    lastPeriodStartDate: Optional[str] = None
+    lastPeriodStartDate: Optional[Union[str, date]] = None
     theme: Optional[str] = None
     textSize: Optional[str] = None
     privacyMode: Optional[str] = None
@@ -24,7 +25,7 @@ class UserProfileResponse(BaseModel):
     email: str
     avgCycleLength: int
     avgPeriodDuration: int
-    lastPeriodStartDate: str
+    lastPeriodStartDate: Union[str, date]
     theme: str
     textSize: str
     privacyMode: str
@@ -33,12 +34,12 @@ class UserProfileResponse(BaseModel):
     trackMigraine: bool = False
     locationApproved: bool
     city: Optional[str] = None
-    joinedDate: Optional[str] = None
+    joinedDate: Optional[Union[str, date]] = None
 
 # --- Cycle & Flow Schemas ---
 
 class FlowLogItem(BaseModel):
-    date: str
+    date: Union[str, date]
     flow: str
     icon: Optional[str] = "🩸"
 
@@ -50,8 +51,8 @@ class CycleLogFlowRequest(BaseModel):
 
 class CycleResponse(BaseModel):
     id: str
-    startDate: str
-    endDate: Optional[str] = None
+    startDate: Union[str, date]
+    endDate: Optional[Union[str, date]] = None
     length: int
     periodDuration: int
     status: str
@@ -73,7 +74,7 @@ class SymptomUpdateRequest(BaseModel):
 
 class SymptomResponse(BaseModel):
     id: str
-    date: str
+    date: Union[str, date]
     symptomId: str
     symptomName: str
     category: str
@@ -89,7 +90,7 @@ class MoodCreateRequest(BaseModel):
 
 class MoodResponse(BaseModel):
     id: str
-    date: str
+    date: Union[str, date]
     moodId: str
     label: str
     emoji: str
@@ -103,7 +104,7 @@ class HydrationHistoryItem(BaseModel):
     amountMl: int
 
 class HydrationResponse(BaseModel):
-    date: str
+    date: Union[str, date]
     currentMl: int
     goalMl: int
     glasses: int
@@ -282,5 +283,21 @@ class SmartHealthAlertsResponse(BaseModel):
     totalLogsEvaluated: int
     dataConfidence: str
     clinicalDisclaimer: str
+
+# --- Authentication Schemas ---
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class AuthResponse(BaseModel):
+    token: str
+    user: UserProfileResponse
+    message: str = "Success"
 
 

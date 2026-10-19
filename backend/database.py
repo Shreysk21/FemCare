@@ -1,27 +1,56 @@
 import os
-from datetime import datetime, date
+from datetime import datetime, date as py_date
 from sqlalchemy import (
     create_engine, Column, String, Integer, Boolean, Date, DateTime, Text, ForeignKey
 )
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from dotenv import load_dotenv
 
-load_dotenv()
+from pathlib import Path
+
+class FlexibleDate(TypeDecorator):
+    """Allows both str 'YYYY-MM-DD' and Python date objects across SQLite and PostgreSQL."""
+    impl = Date
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, str):
+            try:
+                return py_date.fromisoformat(value[:10])
+            except Exception:
+                return value
+        return value
+
+    def process_result_value(self, value, dialect):
+        return value
+
+# Load .env from the same directory as database.py
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
 
 # Dual Engine: Use Supabase / PostgreSQL if DATABASE_URL provided, else fallback to SQLite
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL:
+if not DATABASE_URL or not DATABASE_URL.strip():
     # Ensure backend directory exists for SQLite
     os.makedirs(os.path.dirname(os.path.abspath(__file__)), exist_ok=True)
-    sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "femcare.db")
+    sqlite_path = Path(__file__).resolve().parent / "femcare.db"
     DATABASE_URL = f"sqlite:///{sqlite_path}"
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
+    DATABASE_URL = DATABASE_URL.strip()
     # Fix standard Postgres prefix if needed (e.g. postgres:// to postgresql://)
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+    connect_args = {}
+    if "sqlite" not in DATABASE_URL:
+        connect_args["sslmode"] = "require"
+
+    engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -34,9 +63,10 @@ class UserProfile(Base):
     id = Column(String, primary_key=True, default="usr_101")
     name = Column(String, nullable=False, default="Shreya Patel")
     email = Column(String, nullable=False, default="shreya.patel@example.com")
+    password_hash = Column(String, nullable=True)
     avg_cycle_length = Column(Integer, default=28)
     avg_period_duration = Column(Integer, default=5)
-    last_period_start_date = Column(String, default="2026-09-17")
+    last_period_start_date = Column(FlexibleDate, default=datetime.utcnow)
     theme = Column(String, default="light")
     text_size = Column(String, default="normal")
     privacy_mode = Column(String, default="discreet")
@@ -45,7 +75,7 @@ class UserProfile(Base):
     track_migraine = Column(Boolean, default=False)
     location_approved = Column(Boolean, default=True)
     city = Column(String, default="San Francisco, CA")
-    joined_date = Column(String, default="2026-01-15")
+    joined_date = Column(FlexibleDate, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     cycles = relationship("Cycle", back_populates="user", cascade="all, delete-orphan")
@@ -63,14 +93,15 @@ class Cycle(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
-    start_date = Column(String, nullable=False)
-    end_date = Column(String, nullable=True)
+    start_date = Column(FlexibleDate, nullable=False)
+    end_date = Column(FlexibleDate, nullable=True)
     length = Column(Integer, default=28)
     period_duration = Column(Integer, default=5)
     status = Column(String, default="current")
     phase = Column(String, default="Follicular Phase")
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("UserProfile", back_populates="cycles")
     flow_logs = relationship("CycleFlowLog", back_populates="cycle", cascade="all, delete-orphan")
@@ -81,7 +112,7 @@ class CycleFlowLog(Base):
 
     id = Column(String, primary_key=True)
     cycle_id = Column(String, ForeignKey("cycles.id", ondelete="CASCADE"), nullable=False)
-    date = Column(String, nullable=False)
+    date = Column(FlexibleDate, nullable=False)
     flow = Column(String, nullable=False, default="Medium")
     icon = Column(String, default="🩸")
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -94,7 +125,7 @@ class SymptomLog(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
-    date = Column(String, nullable=False)
+    date = Column(FlexibleDate, nullable=False)
     symptom_id = Column(String, nullable=False)
     symptom_name = Column(String, nullable=False)
     category = Column(String, default="Pain & Discomfort")
@@ -111,7 +142,7 @@ class MoodLog(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
-    date = Column(String, nullable=False)
+    date = Column(FlexibleDate, nullable=False)
     mood_id = Column(String, nullable=False)
     label = Column(String, nullable=False)
     emoji = Column(String, nullable=False)
@@ -127,7 +158,7 @@ class HydrationLog(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
-    date = Column(String, nullable=False)
+    date = Column(FlexibleDate, nullable=False)
     current_ml = Column(Integer, default=0)
     goal_ml = Column(Integer, default=2000)
     glasses = Column(Integer, default=0)
@@ -166,7 +197,7 @@ class CircleMember(Base):
     share_specific_symptoms = Column(Boolean, default=False)
     share_private_notes = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
     user = relationship("UserProfile", back_populates="circle_members")
 
 
@@ -250,12 +281,15 @@ def init_db():
                 ))
                 existing_cols = [row[0] for row in res.fetchall()]
 
+            bool_default = "0" if "sqlite" in str(engine.url) else "false"
+            if "password_hash" not in existing_cols:
+                conn.execute(text("ALTER TABLE profiles ADD COLUMN password_hash VARCHAR"))
             if "language" not in existing_cols:
                 conn.execute(text("ALTER TABLE profiles ADD COLUMN language VARCHAR DEFAULT 'en'"))
             if "track_pcod" not in existing_cols:
-                conn.execute(text("ALTER TABLE profiles ADD COLUMN track_pcod BOOLEAN DEFAULT 0"))
+                conn.execute(text(f"ALTER TABLE profiles ADD COLUMN track_pcod BOOLEAN DEFAULT {bool_default}"))
             if "track_migraine" not in existing_cols:
-                conn.execute(text("ALTER TABLE profiles ADD COLUMN track_migraine BOOLEAN DEFAULT 0"))
+                conn.execute(text(f"ALTER TABLE profiles ADD COLUMN track_migraine BOOLEAN DEFAULT {bool_default}"))
             conn.commit()
         except Exception as e:
             # Table might be freshly created or already up to date

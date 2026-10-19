@@ -10,9 +10,15 @@ except (ImportError, ValueError):
         HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog
     )
 
+DEMO_PASSWORD_HASH = "$pbkdf2-sha256$29000$.T9nTGmNsfYeo9Ra691byw$8JIJpUFMqdG0FLnyOBteA/UMaWr8rKBXAtebLOouCg0"
+
 def seed_initial_data(db: Session):
     existing_user = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
     if existing_user:
+        if not getattr(existing_user, "password_hash", None):
+            existing_user.password_hash = DEMO_PASSWORD_HASH
+            db.commit()
+
         # Check if new feature tables need initial demo data
         if db.query(FeedbackSubmission).count() == 0:
             fb1 = FeedbackSubmission(
@@ -101,6 +107,7 @@ def seed_initial_data(db: Session):
         id="usr_101",
         name="Shreya Patel",
         email="shreya.patel@example.com",
+        password_hash=DEMO_PASSWORD_HASH,
         avg_cycle_length=28,
         avg_period_duration=5,
         last_period_start_date="2026-09-17",

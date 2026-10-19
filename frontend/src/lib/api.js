@@ -8,9 +8,11 @@ const BASE_URL = '/api';
  */
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
+  const token = typeof window !== 'undefined' ? localStorage.getItem('femcare_token') : null;
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options.headers,
     },
     ...options,
@@ -30,6 +32,31 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  // --- AUTHENTICATION ---
+  async login({ email, password }) {
+    return request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
+  },
+
+  async signup({ name, email, password }) {
+    return request('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
+  },
+
+  async getMe() {
+    return request('/auth/me');
+  },
+
+  async logout() {
+    return request('/auth/logout', {
+      method: 'POST',
+    });
+  },
+
   // --- USER PROFILE ---
   async getProfile() {
     return request('/profile');

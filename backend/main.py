@@ -17,6 +17,7 @@ try:
     from .database import init_db, SessionLocal
     from .seed import seed_initial_data
     from .routes import (
+        auth,
         profile,
         cycles,
         symptoms,
@@ -31,6 +32,7 @@ except (ImportError, ValueError):
     from database import init_db, SessionLocal
     from seed import seed_initial_data
     from routes import (
+        auth,
         profile,
         cycles,
         symptoms,
@@ -78,6 +80,7 @@ app.add_middleware(
 )
 
 # Include Routers
+app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(cycles.router)
 app.include_router(symptoms.router)

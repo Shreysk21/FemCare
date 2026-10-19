@@ -3,15 +3,19 @@ from sqlalchemy.orm import Session
 try:
     from ..database import get_db, UserProfile
     from ..schemas import UserProfileResponse, UserProfileUpdate
+    from .auth import get_current_user_id
 except (ImportError, ValueError):
     from database import get_db, UserProfile
     from schemas import UserProfileResponse, UserProfileUpdate
+    from routes.auth import get_current_user_id
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
 @router.get("", response_model=UserProfileResponse)
-def get_profile(db: Session = Depends(get_db)):
-    profile = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
+def get_profile(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
+    if not profile:
+        profile = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found")
     return UserProfileResponse(
@@ -33,10 +37,10 @@ def get_profile(db: Session = Depends(get_db)):
     )
 
 @router.put("", response_model=UserProfileResponse)
-def update_profile(update_data: UserProfileUpdate, db: Session = Depends(get_db)):
-    profile = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
+def update_profile(update_data: UserProfileUpdate, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
     if not profile:
-        profile = UserProfile(id="usr_101")
+        profile = UserProfile(id=user_id)
         db.add(profile)
 
     if update_data.name is not None:

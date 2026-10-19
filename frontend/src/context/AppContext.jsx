@@ -559,21 +559,81 @@ export const AppProvider = ({ children }) => {
   };
 
   // User Authentication Lifecycle Actions
-  const loginUser = (targetView) => {
-    setIsLoggedIn(true);
-    try { localStorage.setItem('femcare_auth', 'true'); } catch (e) {}
-    showToast(`Welcome back, ${user.name || 'Shreya'}! 🌸`);
-    const destination = targetView || returnViewAfterAuth || 'home';
-    setReturnViewAfterAuth(null);
-    setCurrentView(destination);
+  const loginUser = async (credentials, targetView) => {
+    let email = 'shreya.patel@example.com';
+    let password = 'password123';
+    let dest = targetView;
+
+    if (typeof credentials === 'object' && credentials !== null) {
+      email = credentials.email || email;
+      password = credentials.password || password;
+      dest = credentials.targetView || targetView;
+    } else if (typeof credentials === 'string') {
+      dest = credentials;
+    }
+
+    try {
+      setIsLoading(true);
+      const res = await api.login({ email, password });
+      if (res && res.token) {
+        localStorage.setItem('femcare_token', res.token);
+        localStorage.setItem('femcare_auth', 'true');
+        setUser(res.user);
+        setIsLoggedIn(true);
+        showToast(res.message || `Welcome back, ${res.user.name}! 🌸`);
+        await refreshBackendData();
+        const destination = dest || returnViewAfterAuth || 'home';
+        setReturnViewAfterAuth(null);
+        setCurrentView(destination);
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: 'Login failed' };
+    } catch (err) {
+      const msg = err.message || 'Invalid email or password';
+      showToast(msg, null, '⚠️');
+      return { success: false, error: msg };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const logoutUser = () => {
-    setIsLoggedIn(false);
-    try { localStorage.setItem('femcare_auth', 'false'); } catch (e) {}
-    showToast("Signed out safely", null, "🔒");
-    setAuthSubView('login');
-    setCurrentView('auth');
+  const signupUser = async ({ name, email, password, targetView }) => {
+    try {
+      setIsLoading(true);
+      const res = await api.signup({ name, email, password });
+      if (res && res.token) {
+        localStorage.setItem('femcare_token', res.token);
+        localStorage.setItem('femcare_auth', 'true');
+        setUser(res.user);
+        setIsLoggedIn(true);
+        showToast(res.message || `Welcome to FemCare, ${res.user.name}! 🌸`);
+        await refreshBackendData();
+        const destination = targetView || returnViewAfterAuth || 'home';
+        setReturnViewAfterAuth(null);
+        setCurrentView(destination);
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: 'Signup failed' };
+    } catch (err) {
+      const msg = err.message || 'Signup failed';
+      showToast(msg, null, '⚠️');
+      return { success: false, error: msg };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logoutUser = async () => {
+    try {
+      await api.logout().catch(() => {});
+    } finally {
+      localStorage.removeItem('femcare_token');
+      localStorage.setItem('femcare_auth', 'false');
+      setIsLoggedIn(false);
+      showToast("Signed out safely", null, "🔒");
+      setAuthSubView('login');
+      setCurrentView('auth');
+    }
   };
 
   const requireAuth = (callback, returnView) => {
@@ -1234,6 +1294,7 @@ export const AppProvider = ({ children }) => {
         // Authentication & Session
         isLoggedIn,
         loginUser,
+        signupUser,
         logoutUser,
         requireAuth,
         returnViewAfterAuth,

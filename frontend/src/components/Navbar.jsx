@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { ShoppingBag, Palette, Bot, User, Eye, EyeOff, HeartHandshake, Languages, Bell } from 'lucide-react';
+import { ShoppingBag, Palette, Bot, User, Eye, EyeOff, HeartHandshake, Languages, Bell, LogIn } from 'lucide-react';
 import { Modal } from './Modal';
 import { FsmLoggingModal } from './FsmLoggingModal';
 
@@ -17,6 +17,9 @@ export const Navbar = () => {
     language,
     setLanguage,
     smartAlertData,
+    isLoggedIn,
+    user,
+    setAuthSubView,
     t
   } = useApp();
 
@@ -177,18 +180,38 @@ export const Navbar = () => {
               <Palette className="w-4 h-4 text-pink-500" />
             </button>
 
-            {/* Profile Avatar */}
-            <button
-              onClick={() => setCurrentView('profile')}
-              className={`p-2 rounded-full border transition-all ${
-                currentView === 'profile'
-                  ? 'bg-pink-100 dark:bg-pink-950 border-pink-400 text-pink-600 dark:text-pink-300'
-                  : 'border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] hover:bg-slate-100'
-              }`}
-              aria-label="Profile and Settings"
-            >
-              <User className="w-4 h-4" />
-            </button>
+            {/* Auth / Profile Button */}
+            {isLoggedIn ? (
+              <button
+                onClick={() => setCurrentView('profile')}
+                className={`p-1.5 px-2.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                  currentView === 'profile'
+                    ? 'bg-pink-100 dark:bg-pink-950 border-pink-400 text-pink-600 dark:text-pink-300'
+                    : 'border-[var(--border-subtle)] bg-[var(--bg-surface-elevated)] text-[var(--text-primary)] hover:bg-slate-100'
+                }`}
+                aria-label="Profile and Settings"
+                title={`Profile: ${user?.name || 'User'}`}
+              >
+                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-pink-500 to-rose-400 text-white flex items-center justify-center text-[10px] font-bold">
+                  {user?.name ? user.name.slice(0, 1).toUpperCase() : 'U'}
+                </div>
+                <span className="text-xs font-bold hidden sm:inline truncate max-w-[70px]">
+                  {user?.name?.split(' ')[0] || 'Profile'}
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setAuthSubView('login');
+                  setCurrentView('auth');
+                }}
+                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+                title="Sign in or create account"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In</span>
+              </button>
+            )}
 
           </div>
 
