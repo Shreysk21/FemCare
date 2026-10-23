@@ -43,7 +43,7 @@ export const RadialFabMenu = () => {
       id: 'mood',
       label: t('fab.logMood', 'Log Mood'),
       icon: '😊',
-      color: 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/40',
+      color: 'bg-amber-400 hover:bg-amber-500 text-slate-950 font-black shadow-amber-500/40',
       angle: -90,
       onClick: () => {
         setRadialMenuOpen(false);
@@ -113,7 +113,7 @@ export const RadialFabMenu = () => {
                   >
                     <span>{act.icon}</span>
                   </button>
-                  <span className="mt-1 px-2 py-0.5 rounded-md bg-slate-900/90 text-white text-[10px] font-bold shadow-md whitespace-nowrap opacity-90 group-hover:opacity-100">
+                  <span className="mt-1 px-2.5 py-0.5 rounded-md bg-slate-950 text-white text-[10px] font-extrabold shadow-md whitespace-nowrap border border-white/20">
                     {act.label}
                   </span>
                 </div>

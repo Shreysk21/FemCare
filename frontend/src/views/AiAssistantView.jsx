@@ -304,7 +304,7 @@ export const AiAssistantView = () => {
                 <span>{t('ai.betaBadge', 'Voice Enabled')}</span>
               </span>
             </h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
               {t('ai.subtitle', 'Menstrual & general wellness information with speech interaction')}
             </p>
           </div>
@@ -400,7 +400,7 @@ export const AiAssistantView = () => {
         ))}
 
         {isTyping && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium pl-10">
+          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 text-xs font-bold pl-10">
             <span className="animate-pulse">Assistant is typing... 🌿</span>
           </div>
         )}
@@ -409,7 +409,7 @@ export const AiAssistantView = () => {
 
       {/* Suggested Questions Chips */}
       <div className="shrink-0 space-y-2 pt-1">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200">
           {t('ai.suggestedQuestions', 'Suggested Questions:')}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -417,7 +417,7 @@ export const AiAssistantView = () => {
             <button
               key={idx}
               onClick={() => handleSendMessage(q)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-pink-50 dark:hover:bg-pink-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0 transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-pink-50 dark:hover:bg-pink-950 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 shrink-0 transition-colors cursor-pointer"
             >
               • {q}
             </button>
@@ -512,8 +512,8 @@ export const AiAssistantView = () => {
         </form>
 
         {/* Mandatory Medical Disclaimer */}
-        <div className="text-[10px] text-slate-400 text-center font-medium flex items-center justify-center gap-1">
-          <Shield className="w-3 h-3 text-slate-400 shrink-0" />
+        <div className="text-[11px] text-slate-600 dark:text-slate-400 text-center font-medium flex items-center justify-center gap-1.5 pt-1">
+          <Shield className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
           <span>{t('ai.disclaimer', 'FemCare Assistant provides general information and is not a substitute for professional medical advice.')}</span>
         </div>
       </div>

@@ -91,7 +91,7 @@ export const WellnessStoreView = () => {
                     <div className="w-12 h-12 rounded-2xl bg-pink-50 dark:bg-pink-950 text-2xl flex items-center justify-center">
                       {product.image}
                     </div>
-                    <span className="text-[10px] font-bold text-pink-700 bg-pink-50 dark:bg-pink-950 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-extrabold text-pink-800 dark:text-pink-200 bg-pink-50 dark:bg-pink-950/80 border border-pink-200 dark:border-pink-800 px-2 py-0.5 rounded-full">
                       {product.badge}
                     </span>
                   </div>
@@ -103,9 +103,9 @@ export const WellnessStoreView = () => {
                     >
                       {product.name}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-1">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1">
                       <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{product.rating}</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{product.rating}</span>
                       <span>({product.reviews} reviews)</span>
                     </div>
                   </div>
@@ -155,19 +155,19 @@ export const WellnessStoreView = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{item.product.image}</span>
                       <div>
-                        <div className="font-bold text-slate-800 dark:text-slate-100">{item.product.name}</div>
-                        <div className="text-slate-500">${item.product.price.toFixed(2)} each</div>
+                        <div className="font-extrabold text-slate-900 dark:text-slate-100">{item.product.name}</div>
+                        <div className="text-slate-700 dark:text-slate-300 font-medium">${item.product.price.toFixed(2)} each</div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1">
-                        <button onClick={() => updateCartQty(item.product.id, -1)}><Minus className="w-3.5 h-3.5 text-slate-500" /></button>
-                        <span className="font-bold">{item.quantity}</span>
-                        <button onClick={() => updateCartQty(item.product.id, 1)}><Plus className="w-3.5 h-3.5 text-slate-500" /></button>
+                      <div className="flex items-center gap-2 border border-slate-300 dark:border-slate-700 rounded-xl px-2 py-1">
+                        <button onClick={() => updateCartQty(item.product.id, -1)} aria-label="Decrease quantity"><Minus className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" /></button>
+                        <span className="font-extrabold text-slate-900 dark:text-slate-100">{item.quantity}</span>
+                        <button onClick={() => updateCartQty(item.product.id, 1)} aria-label="Increase quantity"><Plus className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" /></button>
                       </div>
 
-                      <button onClick={() => removeFromCart(item.product.id)} className="text-rose-500">
+                      <button onClick={() => removeFromCart(item.product.id)} className="text-rose-600 dark:text-rose-400 p-1 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-lg cursor-pointer" aria-label="Remove item">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -176,23 +176,23 @@ export const WellnessStoreView = () => {
               </div>
 
               {/* Summary */}
-              <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs font-medium">
-                <div className="flex justify-between text-slate-600">
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-2 text-xs font-semibold">
+                <div className="flex justify-between text-slate-700 dark:text-slate-300 font-medium">
                   <span>Subtotal</span>
-                  <span>${cartSubtotal.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-bold">${cartSubtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-slate-700 dark:text-slate-300 font-medium">
                   <span>Estimated Shipping</span>
-                  <span>${shippingFee.toFixed(2)}</span>
+                  <span className="text-slate-900 dark:text-slate-100 font-bold">${shippingFee.toFixed(2)}</span>
                 </div>
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between text-sm font-black text-slate-900 dark:text-slate-100">
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between text-sm font-black text-slate-900 dark:text-slate-100">
                   <span>Total</span>
                   <span>${grandTotal.toFixed(2)}</span>
                 </div>
 
                 <button
                   onClick={() => setCheckoutModalOpen(true)}
-                  className="w-full py-3.5 mt-2 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md flex items-center justify-center gap-1.5"
+                  className="w-full py-3.5 mt-2 bg-pink-600 hover:bg-pink-700 text-white font-extrabold rounded-xl shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <span>Proceed to Checkout</span>
                   <ArrowRight className="w-4 h-4" />
@@ -212,12 +212,12 @@ export const WellnessStoreView = () => {
               className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs space-y-2"
             >
               <div className="flex justify-between font-bold">
-                <span>Order #{ord.id}</span>
-                <span className="text-emerald-600 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full text-[10px]">
+                <span className="text-slate-900 dark:text-slate-100 font-extrabold">Order #{ord.id}</span>
+                <span className="text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
                   {ord.status}
                 </span>
               </div>
-              <div className="text-slate-500">Date: {ord.date} • Total: <strong>${ord.total.toFixed(2)}</strong></div>
+              <div className="text-slate-700 dark:text-slate-300 font-medium">Date: {ord.date} • Total: <strong className="text-slate-900 dark:text-slate-100 font-extrabold">${ord.total.toFixed(2)}</strong></div>
             </div>
           ))}
         </div>
@@ -236,14 +236,14 @@ export const WellnessStoreView = () => {
             </div>
 
             <div>
-              <div className="text-sm font-bold text-slate-900 dark:text-slate-100">${selectedProduct.price.toFixed(2)}</div>
-              <p className="text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{selectedProduct.description}</p>
+              <div className="text-sm font-extrabold text-slate-900 dark:text-slate-100">${selectedProduct.price.toFixed(2)}</div>
+              <p className="text-slate-700 dark:text-slate-200 mt-1 leading-relaxed font-medium">{selectedProduct.description}</p>
             </div>
 
             <div className="space-y-1">
-              <div className="font-bold text-slate-800 dark:text-slate-200">Key Benefits:</div>
+              <div className="font-extrabold text-slate-900 dark:text-slate-100">Key Benefits:</div>
               {selectedProduct.benefits.map((b, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                <div key={idx} className="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-medium">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                   <span>{b}</span>
                 </div>
@@ -255,7 +255,7 @@ export const WellnessStoreView = () => {
                 addToCart(selectedProduct);
                 setSelectedProduct(null);
               }}
-              className="w-full py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md"
+              className="w-full py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-extrabold rounded-xl shadow-md cursor-pointer"
             >
               Add to Shopping Cart
             </button>
@@ -270,9 +270,9 @@ export const WellnessStoreView = () => {
         title="Complete Order Checkout"
       >
         <div className="space-y-4 text-xs">
-          <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl space-y-1">
-            <div className="font-bold">Order Total: ${grandTotal.toFixed(2)}</div>
-            <div className="text-slate-500">Shipping to: 123 Health Ave, San Francisco, CA</div>
+          <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1">
+            <div className="font-extrabold text-slate-900 dark:text-slate-100">Order Total: ${grandTotal.toFixed(2)}</div>
+            <div className="text-slate-700 dark:text-slate-300 font-medium">Shipping to: 123 Health Ave, San Francisco, CA</div>
           </div>
 
           <button
@@ -281,7 +281,7 @@ export const WellnessStoreView = () => {
               setCheckoutModalOpen(false);
               setActiveTab('orders');
             }}
-            className="w-full py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md"
+            className="w-full py-3.5 bg-pink-600 hover:bg-pink-700 text-white font-extrabold rounded-xl shadow-md cursor-pointer"
           >
             Place Order (${grandTotal.toFixed(2)})
           </button>

@@ -30,54 +30,67 @@ import {
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  // Routing & View State
-  const [currentView, setCurrentView] = useState('home'); // home, cycle, track, analytics, community, care, store, ai, notifications, profile
-  const [authSubView, setAuthSubView] = useState('login'); 
-  const [onboardingStep, setOnboardingStep] = useState(1);
-  const [activeTrackTab, setActiveTrackTab] = useState('symptoms');
-
   // Authentication State & Session Continuity
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     try {
       const saved = localStorage.getItem('femcare_auth');
-      return saved !== null ? JSON.parse(saved) : true;
+      const token = localStorage.getItem('femcare_token');
+      return saved === 'true' && Boolean(token);
     } catch (e) {
-      return true;
+      return false;
     }
   });
+
+  // Routing & View State - default to 'auth' (Login page) if unauthenticated, 'home' if logged in
+  const [currentView, setCurrentView] = useState(() => {
+    try {
+      const saved = localStorage.getItem('femcare_auth');
+      const token = localStorage.getItem('femcare_token');
+      if (saved === 'true' && Boolean(token)) return 'home';
+    } catch (e) {}
+    return 'auth';
+  });
+  const [authSubView, setAuthSubView] = useState('login'); 
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [activeTrackTab, setActiveTrackTab] = useState('symptoms');
   const [returnViewAfterAuth, setReturnViewAfterAuth] = useState(null);
 
   // Live Backend & Loading States
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
 
-  // App Data States
-  const [user, setUser] = useState(INITIAL_USER_PROFILE);
-  const [cycles, setCycles] = useState(INITIAL_CYCLES);
-  const [symptomLogs, setSymptomLogs] = useState(INITIAL_SYMPTOM_LOGS);
-  const [moodLogs, setMoodLogs] = useState(INITIAL_MOOD_LOGS);
-  const [hydration, setHydration] = useState(INITIAL_HYDRATION_LOG);
-  const [sleepLogs, setSleepLogs] = useState(INITIAL_SLEEP_LOGS);
-  const [activityLogs, setActivityLogs] = useState(INITIAL_ACTIVITY_LOGS);
-  const [foodLogs, setFoodLogs] = useState(INITIAL_FOOD_LOGS);
-  const [medications, setMedications] = useState(INITIAL_MEDICATIONS);
+  // App Data States - Strict User Isolation: clean initial state
+  const [user, setUser] = useState({
+    id: '',
+    name: 'FemCare User',
+    email: '',
+    avgCycleLength: 28,
+    avgPeriodDuration: 5,
+    theme: 'light',
+    textSize: 'normal',
+    privacyMode: 'discreet',
+    language: 'en'
+  });
+  const [cycles, setCycles] = useState([]);
+  const [symptomLogs, setSymptomLogs] = useState([]);
+  const [moodLogs, setMoodLogs] = useState([]);
+  const [hydration, setHydration] = useState({
+    date: new Date().toISOString().split('T')[0],
+    currentMl: 0,
+    goalMl: 2000,
+    glasses: 0,
+    targetGlasses: 8,
+    history: []
+  });
+  const [sleepLogs, setSleepLogs] = useState([]);
+  const [activityLogs, setActivityLogs] = useState([]);
+  const [foodLogs, setFoodLogs] = useState([]);
+  const [medications, setMedications] = useState([]);
   const [insights, setInsights] = useState(INITIAL_INSIGHTS);
   const [notificationPrefs, setNotificationPrefs] = useState(INITIAL_NOTIFICATION_PREFS);
 
   // Phase Logs (Persistent per-date menstrual & cycle phase records)
-  const [phaseLogs, setPhaseLogs] = useState(() => {
-    try {
-      const saved = localStorage.getItem('femcare_phase_logs');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      '2026-09-17': { phase: 'menstrual', flow: 'Heavy' },
-      '2026-09-18': { phase: 'menstrual', flow: 'Medium' },
-      '2026-09-19': { phase: 'menstrual', flow: 'Medium' },
-      '2026-09-20': { phase: 'menstrual', flow: 'Light' },
-      '2026-09-21': { phase: 'menstrual', flow: 'Light' },
-    };
-  });
+  const [phaseLogs, setPhaseLogs] = useState({});
 
   useEffect(() => {
     try {
@@ -97,11 +110,29 @@ export const AppProvider = ({ children }) => {
 
   // Healthcare & Bookings State
   const [clinics, setClinics] = useState(INITIAL_HEALTHCARE_CLINICS);
+  const [clinicsList, setClinicsList] = useState(INITIAL_HEALTHCARE_CLINICS);
+  const [clinicsLoading, setClinicsLoading] = useState(false);
+  const [clinicsError, setClinicsError] = useState(null);
+  const [clinicsLocationPermission, setClinicsLocationPermission] = useState('prompt'); // 'prompt' | 'granted' | 'denied' | 'error'
+  const [userCoords, setUserCoords] = useState(null);
+  const [clinicSearchQuery, setClinicSearchQuery] = useState('');
+  const [clinicRadiusKm, setClinicRadiusKm] = useState(15);
+  const [clinicFacilityFilter, setClinicFacilityFilter] = useState('all');
   const [bookings, setBookings] = useState(INITIAL_BOOKINGS);
 
-  // Store E-Commerce State
-  const [cart, setCart] = useState([]); // [{ product, quantity }]
+  // Wellness Store Cart & Orders State
+  const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState(INITIAL_STORE_ORDERS);
+
+  // In-App Notifications State
+  const [inAppNotifications, setInAppNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  // Circle Care (Partner Sync & Shared With Me) State
+  const [circleInviteModalOpen, setCircleInviteModalOpen] = useState(false);
+  const [circleMembers, setCircleMembers] = useState([]);
+  const [sharedWithMe, setSharedWithMe] = useState([]);
+  const [sharedWithMeLoading, setSharedWithMeLoading] = useState(false);
 
   // Visual Theme & Accessibility
   const [theme, setTheme] = useState(() => {
@@ -177,34 +208,14 @@ export const AppProvider = ({ children }) => {
   // Cramp SOS Modal State
   const [crampSosModalOpen, setCrampSosModalOpen] = useState(false);
 
-  // Circle Care (Partner Sync) State
-  const [circleInviteModalOpen, setCircleInviteModalOpen] = useState(false);
-  const [circleMembers, setCircleMembers] = useState(() => {
-    const saved = localStorage.getItem('femcare_circle_care');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return [
-      {
-        id: "mem_1",
-        name: "Alex Johnson",
-        role: "Partner",
-        email: "alex.j@example.com",
-        syncCode: "FEM-8492",
-        status: "Connected & Syncing",
-        avatar: "💖",
-        permissions: {
-          phaseAndWindow: true,
-          emotionalState: true,
-          specificSymptoms: false,
-          privateNotes: false
-        }
-      }
-    ];
-  });
-
   // --- INITIAL BACKEND DATA SYNCHRONIZATION ---
   const refreshBackendData = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('femcare_token') : null;
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setApiError(null);
@@ -215,26 +226,38 @@ export const AppProvider = ({ children }) => {
         symptomsRes,
         moodsRes,
         hydrationRes,
+        sleepRes,
+        medsRes,
+        activityRes,
         circleRes,
         feedbackRes,
         migraineRes,
         pcodRes,
         conditionsRes,
         predictionsRes,
-        smartAlertsRes
+        smartAlertsRes,
+        notificationsRes,
+        sharedWithMeRes,
+        clinicsRes
       ] = await Promise.allSettled([
         api.getProfile(),
         api.getCycles(),
         api.getSymptoms(),
         api.getMoods(),
         api.getHydration(),
+        api.getSleepLogs(),
+        api.getMedications(),
+        api.getActivityLogs(),
         api.getCircleMembers(),
         api.getMyFeedback(),
         api.getMigraineLogs(),
         api.getPcodLogs(),
         api.getConditionsSummary(),
         api.getPredictionInsights(),
-        api.getSmartHealthAlerts()
+        api.getSmartHealthAlerts(),
+        api.getNotifications(),
+        api.getSharedWithMe(),
+        api.getNearbyClinics({ radiusKm: 15, query: '' })
       ]);
 
       if (profileRes.status === 'fulfilled' && profileRes.value) {
@@ -249,19 +272,38 @@ export const AppProvider = ({ children }) => {
         setTrackPcod(Boolean(profileRes.value.trackPcod));
         setTrackMigraine(Boolean(profileRes.value.trackMigraine));
       }
-      if (cyclesRes.status === 'fulfilled' && Array.isArray(cyclesRes.value) && cyclesRes.value.length > 0) {
+      if (cyclesRes.status === 'fulfilled' && Array.isArray(cyclesRes.value)) {
         setCycles(cyclesRes.value);
+        // Build phaseLogs from current user's actual flow logs
+        const syncedPhaseLogs = {};
+        cyclesRes.value.forEach(cyc => {
+          if (cyc.flowLogs && Array.isArray(cyc.flowLogs)) {
+            cyc.flowLogs.forEach(fl => {
+              syncedPhaseLogs[fl.date] = { phase: 'menstrual', flow: fl.flow };
+            });
+          }
+        });
+        setPhaseLogs(syncedPhaseLogs);
       }
-      if (symptomsRes.status === 'fulfilled' && Array.isArray(symptomsRes.value) && symptomsRes.value.length > 0) {
+      if (symptomsRes.status === 'fulfilled' && Array.isArray(symptomsRes.value)) {
         setSymptomLogs(symptomsRes.value);
       }
-      if (moodsRes.status === 'fulfilled' && Array.isArray(moodsRes.value) && moodsRes.value.length > 0) {
+      if (moodsRes.status === 'fulfilled' && Array.isArray(moodsRes.value)) {
         setMoodLogs(moodsRes.value);
       }
       if (hydrationRes.status === 'fulfilled' && hydrationRes.value) {
         setHydration(hydrationRes.value);
       }
-      if (circleRes.status === 'fulfilled' && Array.isArray(circleRes.value) && circleRes.value.length > 0) {
+      if (sleepRes.status === 'fulfilled' && Array.isArray(sleepRes.value)) {
+        setSleepLogs(sleepRes.value);
+      }
+      if (medsRes.status === 'fulfilled' && Array.isArray(medsRes.value)) {
+        setMedications(medsRes.value);
+      }
+      if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
+        setActivityLogs(activityRes.value);
+      }
+      if (circleRes.status === 'fulfilled' && Array.isArray(circleRes.value)) {
         setCircleMembers(circleRes.value);
       }
       if (feedbackRes.status === 'fulfilled' && Array.isArray(feedbackRes.value)) {
@@ -308,6 +350,15 @@ export const AppProvider = ({ children }) => {
           setActiveSmartAlert(null);
         }
       }
+      if (notificationsRes && notificationsRes.status === 'fulfilled' && Array.isArray(notificationsRes.value)) {
+        setInAppNotifications(notificationsRes.value);
+      }
+      if (sharedWithMeRes && sharedWithMeRes.status === 'fulfilled' && Array.isArray(sharedWithMeRes.value)) {
+        setSharedWithMe(sharedWithMeRes.value);
+      }
+      if (clinicsRes && clinicsRes.status === 'fulfilled' && Array.isArray(clinicsRes.value) && clinicsRes.value.length > 0) {
+        setClinicsList(clinicsRes.value);
+      }
     } catch (err) {
       console.warn('[AppContext] Backend synchronization notice:', err.message);
       setApiError(err.message);
@@ -317,44 +368,77 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    refreshBackendData();
-  }, [refreshBackendData]);
+    if (isLoggedIn) {
+      refreshBackendData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isLoggedIn, refreshBackendData]);
 
   useEffect(() => {
     localStorage.setItem('femcare_circle_care', JSON.stringify(circleMembers));
   }, [circleMembers]);
 
-  // Circle Care Actions with Backend Sync
+  // Circle Care Actions with Backend Sync & Email Verification
   const addCircleMember = async (name, role, email, permissions) => {
-    const randomCode = `FEM-${Math.floor(1000 + Math.random() * 9000)}`;
-    const tempId = `mem_${Date.now()}`;
-    const newMember = {
-      id: tempId,
-      name: name || "Circle Member",
-      role: role || "Partner",
-      email: email || "partner@example.com",
-      syncCode: randomCode,
-      status: "Connected & Syncing",
-      avatar: role === 'Partner' ? '💖' : role === 'Parent' ? '🏡' : role === 'Friend' ? '🌸' : '🤝',
-      permissions: permissions || {
-        phaseAndWindow: true,
-        emotionalState: true,
-        specificSymptoms: false,
-        privateNotes: false
-      }
-    };
-    setCircleMembers(prev => [...prev, newMember]);
-    showToast(`Circle Care invite sent to ${name} (${role})! Sync Code: ${randomCode} 💌`);
-
     try {
       const saved = await api.inviteCircleMember({ name, role, email, permissions });
       if (saved) {
-        setCircleMembers(prev => prev.map(m => m.id === tempId ? saved : m));
+        setCircleMembers(prev => [saved, ...prev.filter(m => m.id !== saved.id)]);
+        showToast(`Sharing invitation sent to ${name} (${email})! Status: Pending partner acceptance 💌`);
+        return { success: true, member: saved };
       }
     } catch (err) {
-      console.warn('[AppContext] API fallback for circle invite:', err.message);
+      console.warn('[AppContext] Circle invite error:', err.message);
+      showToast(err.message || 'Failed to send sharing invitation', null, '⚠️');
+      throw err;
     }
   };
+
+  const respondToCircleShare = async (memberId, action) => {
+    try {
+      const updated = await api.respondToCircleShare(memberId, action);
+      if (action === 'accept') {
+        showToast('Health data sharing request accepted! 🤝');
+      } else {
+        showToast('Health data sharing request declined.');
+      }
+      await fetchSharedWithMe();
+      await fetchInAppNotifications();
+      return updated;
+    } catch (err) {
+      console.warn('[AppContext] respondToCircleShare error:', err.message);
+      showToast(err.message || 'Error responding to share request', null, '⚠️');
+      throw err;
+    }
+  };
+
+  const revokeCircleShare = async (memberId) => {
+    try {
+      const updated = await api.revokeCircleShare(memberId);
+      setCircleMembers(prev => prev.map(m => m.id === memberId ? { ...m, status: 'revoked' } : m));
+      showToast('Sharing access revoked. Partner can no longer view your health data. 🔒');
+      return updated;
+    } catch (err) {
+      console.warn('[AppContext] revokeCircleShare error:', err.message);
+      showToast(err.message || 'Error revoking access', null, '⚠️');
+      throw err;
+    }
+  };
+
+  const fetchSharedWithMe = useCallback(async () => {
+    try {
+      setSharedWithMeLoading(true);
+      const res = await api.getSharedWithMe();
+      if (Array.isArray(res)) {
+        setSharedWithMe(res);
+      }
+    } catch (err) {
+      console.warn('[AppContext] Failed to fetch shared-with-me:', err.message);
+    } finally {
+      setSharedWithMeLoading(false);
+    }
+  }, []);
 
   const updateMemberPermissions = async (memberId, updatedPermissions) => {
     setCircleMembers(prev => prev.map(m => m.id === memberId ? { ...m, permissions: updatedPermissions } : m));
@@ -376,6 +460,102 @@ export const AppProvider = ({ children }) => {
     } catch (err) {
       console.warn('[AppContext] API fallback for delete circle member:', err.message);
     }
+  };
+
+  // In-App Notification Actions
+  const fetchInAppNotifications = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      const res = await api.getNotifications();
+      if (Array.isArray(res)) {
+        setInAppNotifications(res);
+      }
+    } catch (err) {
+      console.warn('[AppContext] Failed to fetch in-app notifications:', err.message);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  const markNotificationRead = async (notificationId) => {
+    setInAppNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, status: 'read' } : n));
+    try {
+      await api.markNotificationRead(notificationId);
+    } catch (err) {
+      console.warn('[AppContext] Failed to mark notification read:', err.message);
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    setInAppNotifications(prev => prev.map(n => ({ ...n, status: 'read' })));
+    try {
+      await api.markAllNotificationsRead();
+      showToast('All notifications marked as read ✓');
+    } catch (err) {
+      console.warn('[AppContext] Failed to mark all notifications read:', err.message);
+    }
+  };
+
+  const deleteNotification = async (notificationId) => {
+    setInAppNotifications(prev => prev.filter(n => n.id !== notificationId));
+    try {
+      await api.deleteNotification(notificationId);
+    } catch (err) {
+      console.warn('[AppContext] Failed to delete notification:', err.message);
+    }
+  };
+
+  // Nearby Clinics & Doctors Actions
+  const fetchNearbyClinics = useCallback(async ({ lat, lon, query, radius, type } = {}) => {
+    try {
+      setClinicsLoading(true);
+      setClinicsError(null);
+      const res = await api.getNearbyClinics({
+        latitude: lat !== undefined ? lat : userCoords?.latitude,
+        longitude: lon !== undefined ? lon : userCoords?.longitude,
+        query: query !== undefined ? query : clinicSearchQuery,
+        radiusKm: radius !== undefined ? radius : clinicRadiusKm,
+        facilityType: type !== undefined ? type : clinicFacilityFilter
+      });
+      if (Array.isArray(res) && res.length > 0) {
+        setClinicsList(res);
+      } else if (Array.isArray(res)) {
+        setClinicsList([]);
+      }
+    } catch (err) {
+      console.warn('[AppContext] Fetch clinics notice:', err.message);
+      setClinicsError(err.message || 'Unable to retrieve nearby clinics');
+    } finally {
+      setClinicsLoading(false);
+    }
+  }, [userCoords, clinicSearchQuery, clinicRadiusKm, clinicFacilityFilter]);
+
+  const requestUserLocation = () => {
+    if (!navigator.geolocation) {
+      setClinicsLocationPermission('denied');
+      showToast('Geolocation is not supported by your browser. Please enter your city/area manually.', null, '📍');
+      return;
+    }
+
+    setClinicsLocationPermission('prompt');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        };
+        setUserCoords(coords);
+        setClinicsLocationPermission('granted');
+        showToast('Location approved! Showing verified clinics near you 📍');
+        fetchNearbyClinics({ lat: coords.latitude, lon: coords.longitude });
+      },
+      (err) => {
+        console.warn('[AppContext] Geolocation denied:', err.message);
+        setClinicsLocationPermission('denied');
+        showToast('Location permission denied. You can search by city, area, or PIN code manually.', null, '📍');
+      },
+      { timeout: 8000, enableHighAccuracy: false }
+    );
   };
 
   const sendPartnerCareGesture = (gestureText, fromName = "Alex (Partner)") => {
@@ -558,6 +738,48 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Local State Reset Action for Clean Account Isolation
+  const resetAllLocalState = useCallback(() => {
+    setUser({
+      id: '',
+      name: 'FemCare User',
+      email: '',
+      avgCycleLength: 28,
+      avgPeriodDuration: 5,
+      theme: 'light',
+      textSize: 'normal',
+      privacyMode: 'discreet',
+      language: 'en'
+    });
+    setCycles([]);
+    setSymptomLogs([]);
+    setMoodLogs([]);
+    setHydration({
+      date: new Date().toISOString().split('T')[0],
+      currentMl: 0,
+      goalMl: 2000,
+      glasses: 0,
+      targetGlasses: 8,
+      history: []
+    });
+    setSleepLogs([]);
+    setActivityLogs([]);
+    setFoodLogs([]);
+    setMedications([]);
+    setPcodLogs([]);
+    setMigraineLogs([]);
+    setFeedbacks([]);
+    setPredictionInsights(null);
+    setConditionsSummary(null);
+    setSmartAlertData(null);
+    setActiveSmartAlert(null);
+    setPhaseLogs({});
+    setCircleMembers([]);
+    try {
+      localStorage.removeItem('femcare_phase_logs');
+    } catch (e) {}
+  }, []);
+
   // User Authentication Lifecycle Actions
   const loginUser = async (credentials, targetView) => {
     let email = 'shreya.patel@example.com';
@@ -578,6 +800,7 @@ export const AppProvider = ({ children }) => {
       if (res && res.token) {
         localStorage.setItem('femcare_token', res.token);
         localStorage.setItem('femcare_auth', 'true');
+        resetAllLocalState();
         setUser(res.user);
         setIsLoggedIn(true);
         showToast(res.message || `Welcome back, ${res.user.name}! 🌸`);
@@ -604,6 +827,7 @@ export const AppProvider = ({ children }) => {
       if (res && res.token) {
         localStorage.setItem('femcare_token', res.token);
         localStorage.setItem('femcare_auth', 'true');
+        resetAllLocalState();
         setUser(res.user);
         setIsLoggedIn(true);
         showToast(res.message || `Welcome to FemCare, ${res.user.name}! 🌸`);
@@ -630,6 +854,7 @@ export const AppProvider = ({ children }) => {
       localStorage.removeItem('femcare_token');
       localStorage.setItem('femcare_auth', 'false');
       setIsLoggedIn(false);
+      resetAllLocalState();
       showToast("Signed out safely", null, "🔒");
       setAuthSubView('login');
       setCurrentView('auth');
@@ -663,23 +888,40 @@ export const AppProvider = ({ children }) => {
     const today = new Date().toISOString().split('T')[0];
     const targetDate = startDate || today;
 
-    const updatedCycles = [...cycles];
-    const currentCycle = updatedCycles[0];
-
     const newFlowLog = { date: targetDate, flow, icon: flow === 'Light' ? '💧' : '🩸' };
 
-    const existingIndex = currentCycle.flowLogs.findIndex(f => f.date === targetDate);
-    if (existingIndex >= 0) {
-      currentCycle.flowLogs[existingIndex] = newFlowLog;
-    } else {
-      currentCycle.flowLogs.unshift(newFlowLog);
-    }
-
-    setCycles(updatedCycles);
     setPhaseLogs(prev => ({
       ...prev,
       [targetDate]: { phase: 'menstrual', flow, mood: optionalMood, symptoms: optionalSymptoms }
     }));
+
+    // Optimistically update cycles (handles 0 cycles cleanly)
+    setCycles(prev => {
+      const updated = [...prev];
+      let currentCycle = updated[0];
+      if (!currentCycle) {
+        currentCycle = {
+          id: `cyc_${Date.now()}`,
+          startDate: targetDate,
+          endDate: null,
+          cycleLength: user.avgCycleLength || 28,
+          periodDuration: user.avgPeriodDuration || 5,
+          status: 'current',
+          flowLogs: [newFlowLog]
+        };
+        return [currentCycle];
+      } else {
+        const flowLogs = currentCycle.flowLogs ? [...currentCycle.flowLogs] : [];
+        const existingIdx = flowLogs.findIndex(f => f.date === targetDate);
+        if (existingIdx >= 0) {
+          flowLogs[existingIdx] = newFlowLog;
+        } else {
+          flowLogs.unshift(newFlowLog);
+        }
+        updated[0] = { ...currentCycle, flowLogs };
+        return updated;
+      }
+    });
 
     // Optional Mood
     if (optionalMood) {
@@ -703,7 +945,14 @@ export const AppProvider = ({ children }) => {
         optionalSymptoms
       });
       if (savedCycle) {
-        setCycles(prev => prev.map(c => c.id === savedCycle.id ? savedCycle : c));
+        setCycles(prev => {
+          const exists = prev.some(c => c.id === savedCycle.id);
+          if (exists) {
+            return prev.map(c => c.id === savedCycle.id ? savedCycle : c);
+          } else {
+            return [savedCycle, ...prev.filter(c => !c.id.startsWith('cyc_'))];
+          }
+        });
       }
       refreshPredictionInsights();
       api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
@@ -718,7 +967,7 @@ export const AppProvider = ({ children }) => {
       if (c.id === cycleId) {
         return {
           ...c,
-          flowLogs: c.flowLogs.filter(f => f.date !== dateToDelete)
+          flowLogs: (c.flowLogs || []).filter(f => f.date !== dateToDelete)
         };
       }
       return c;
@@ -736,6 +985,34 @@ export const AppProvider = ({ children }) => {
       api.getConditionsSummary().then(sum => sum && setConditionsSummary(sum)).catch(() => {});
     } catch (err) {
       console.warn('[AppContext] API fallback for delete period entry:', err.message);
+    }
+  };
+
+  const createCycle = async (cycleData) => {
+    try {
+      const saved = await api.createCycle(cycleData);
+      if (saved) {
+        setCycles(prev => [saved, ...prev]);
+        showToast("New cycle period recorded 🌸");
+        refreshPredictionInsights();
+        return saved;
+      }
+    } catch (err) {
+      showToast(err.message || "Failed to create cycle", null, "⚠️");
+      throw err;
+    }
+  };
+
+  const deleteCycle = async (cycleId) => {
+    const backup = [...cycles];
+    setCycles(prev => prev.filter(c => c.id !== cycleId));
+    showToast("Cycle record deleted 🗑️", () => setCycles(backup));
+
+    try {
+      await api.deleteCycle(cycleId);
+      refreshPredictionInsights();
+    } catch (err) {
+      console.warn('[AppContext] API fallback for delete cycle:', err.message);
     }
   };
 
@@ -908,38 +1185,101 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Sleep Action
-  const addSleepLog = (hours, minutes, quality, qualityEmoji) => {
+  // Delete Mood Action
+  const deleteMoodLog = async (moodId) => {
+    const backup = [...moodLogs];
+    setMoodLogs(prev => prev.filter(m => m.id !== moodId));
+    showToast(`Mood record removed`, () => setMoodLogs(backup));
+
+    try {
+      await api.deleteMood(moodId);
+    } catch (err) {
+      console.warn('[AppContext] API fallback for delete mood:', err.message);
+    }
+  };
+
+  // Sleep Actions with API Sync
+  const addSleepLog = async (hours, minutes, quality, qualityEmoji) => {
     const today = new Date().toISOString().split('T')[0];
+    const tempId = `slp_${Date.now()}`;
     const newSleep = {
-      id: `slp_${Date.now()}`,
+      id: tempId,
       date: today,
       hours: parseInt(hours),
       minutes: parseInt(minutes),
       quality,
-      qualityEmoji
+      qualityEmoji: qualityEmoji || '😴'
     };
     setSleepLogs(prev => [newSleep, ...prev]);
     showToast(`Sleep logged: ${hours}h ${minutes}m 😴`);
+
+    try {
+      const saved = await api.addSleepLog({
+        date: today,
+        hours: parseInt(hours),
+        minutes: parseInt(minutes),
+        quality,
+        qualityEmoji: qualityEmoji || '😴',
+        notes: ''
+      });
+      if (saved) {
+        setSleepLogs(prev => prev.map(s => s.id === tempId ? saved : s));
+      }
+    } catch (err) {
+      console.warn('[AppContext] API fallback for add sleep:', err.message);
+    }
   };
 
-  // Medication Actions
-  const addMedication = (name, dosage, scheduleTime) => {
+  const deleteSleepLog = async (sleepId) => {
+    const backup = [...sleepLogs];
+    setSleepLogs(prev => prev.filter(s => s.id !== sleepId));
+    showToast(`Sleep log deleted`, () => setSleepLogs(backup));
+
+    try {
+      await api.deleteSleepLog(sleepId);
+    } catch (err) {
+      console.warn('[AppContext] API fallback for delete sleep:', err.message);
+    }
+  };
+
+  // Medication Actions with API Sync
+  const addMedication = async (name, dosage, scheduleTime) => {
+    const tempId = `med_${Date.now()}`;
     const newMed = {
-      id: `med_${Date.now()}`,
+      id: tempId,
       name,
-      dosage,
-      scheduleTime,
+      dosage: dosage || "1 tablet",
+      scheduleTime: scheduleTime || "08:00 AM",
       reminderEnabled: true
     };
     setMedications(prev => [...prev, newMed]);
     showToast(`Medication added: ${name}`);
+
+    try {
+      const saved = await api.addMedication({
+        name,
+        dosage: dosage || "1 tablet",
+        scheduleTime: scheduleTime || "08:00 AM",
+        reminderEnabled: true
+      });
+      if (saved) {
+        setMedications(prev => prev.map(m => m.id === tempId ? saved : m));
+      }
+    } catch (err) {
+      console.warn('[AppContext] API fallback for add medication:', err.message);
+    }
   };
 
-  const deleteMedication = (medId) => {
+  const deleteMedication = async (medId) => {
     const backup = [...medications];
     setMedications(prev => prev.filter(m => m.id !== medId));
     showToast(`Medication removed`, () => setMedications(backup));
+
+    try {
+      await api.deleteMedication(medId);
+    } catch (err) {
+      console.warn('[AppContext] API fallback for delete medication:', err.message);
+    }
   };
 
   // Community Forum Actions
@@ -1351,8 +1691,30 @@ export const AppProvider = ({ children }) => {
         reportPost,
         blockUser,
 
+        // In-App Notifications
+        inAppNotifications,
+        notificationsLoading,
+        unreadNotificationCount: inAppNotifications.filter(n => n.status === 'unread').length,
+        fetchInAppNotifications,
+        markNotificationRead,
+        markAllNotificationsRead,
+        deleteNotification,
+
         // Healthcare & Booking
         clinics,
+        clinicsList,
+        clinicsLoading,
+        clinicsError,
+        clinicsLocationPermission,
+        userCoords,
+        clinicSearchQuery,
+        setClinicSearchQuery,
+        clinicRadiusKm,
+        setClinicRadiusKm,
+        clinicFacilityFilter,
+        setClinicFacilityFilter,
+        fetchNearbyClinics,
+        requestUserLocation,
         bookings,
         addBooking,
 
@@ -1378,11 +1740,16 @@ export const AppProvider = ({ children }) => {
         crampSosModalOpen,
         setCrampSosModalOpen,
 
-        // Circle Care (Partner Sync)
+        // Circle Care (Partner Sync & Sisterhood)
         circleInviteModalOpen,
         setCircleInviteModalOpen,
         circleMembers,
+        sharedWithMe,
+        sharedWithMeLoading,
+        fetchSharedWithMe,
         addCircleMember,
+        respondToCircleShare,
+        revokeCircleShare,
         updateMemberPermissions,
         deleteCircleMember,
         sendPartnerCareGesture,
@@ -1429,14 +1796,19 @@ export const AppProvider = ({ children }) => {
         deletePhaseForDate,
         addPeriodEntryDetailed,
         deletePeriodEntry,
+        createCycle,
+        deleteCycle,
         addSymptom,
         updateSymptom,
         deleteSymptom,
         addMoodLog,
+        deleteMoodLog,
         addHydrationMl,
         addSleepLog,
+        deleteSleepLog,
         addMedication,
-        deleteMedication
+        deleteMedication,
+        resetAllLocalState
       }}
     >
       {children}

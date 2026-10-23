@@ -25,7 +25,7 @@ class UserProfileResponse(BaseModel):
     email: str
     avgCycleLength: int
     avgPeriodDuration: int
-    lastPeriodStartDate: Union[str, date]
+    lastPeriodStartDate: Optional[Union[str, date]] = None
     theme: str
     textSize: str
     privacyMode: str
@@ -48,6 +48,24 @@ class CycleLogFlowRequest(BaseModel):
     flow: str = "Medium"
     optionalMood: Optional[Dict[str, Any]] = None
     optionalSymptoms: Optional[List[Dict[str, Any]]] = None
+
+class CycleCreateRequest(BaseModel):
+    startDate: str
+    endDate: Optional[str] = None
+    length: Optional[int] = 28
+    periodDuration: Optional[int] = 5
+    status: Optional[str] = "completed"
+    phase: Optional[str] = "Follicular Phase"
+    notes: Optional[str] = ""
+
+class CycleUpdateRequest(BaseModel):
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+    length: Optional[int] = None
+    periodDuration: Optional[int] = None
+    status: Optional[str] = None
+    phase: Optional[str] = None
+    notes: Optional[str] = None
 
 class CycleResponse(BaseModel):
     id: str
@@ -112,7 +130,15 @@ class HydrationResponse(BaseModel):
     history: List[HydrationHistoryItem] = []
 
 class HydrationAddRequest(BaseModel):
-    mlAmount: int = 250
+    mlAmount: Optional[int] = None
+    amountMl: Optional[int] = None
+
+    def get_amount(self) -> int:
+        if self.mlAmount is not None:
+            return self.mlAmount
+        if self.amountMl is not None:
+            return self.amountMl
+        return 250
 
 # --- Circle Care Schemas ---
 
@@ -133,6 +159,8 @@ class CirclePermissionsUpdateRequest(BaseModel):
 
 class CircleMemberResponse(BaseModel):
     id: str
+    userId: Optional[str] = None
+    recipientId: Optional[str] = None
     name: str
     role: str
     email: str
@@ -140,6 +168,25 @@ class CircleMemberResponse(BaseModel):
     status: str
     avatar: str
     permissions: CircleMemberPermissions
+    createdAt: Optional[str] = None
+
+class CircleShareRespondRequest(BaseModel):
+    action: str  # "accept" or "decline"
+
+class SharedHealthDataResponse(BaseModel):
+    shareId: str
+    senderId: str
+    senderName: str
+    senderEmail: str
+    role: str
+    status: str
+    permissions: CircleMemberPermissions
+    currentPhase: Optional[Dict[str, Any]] = None
+    emotionalState: Optional[Dict[str, Any]] = None
+    recentSymptoms: Optional[List[Dict[str, Any]]] = None
+    privateNotes: Optional[List[str]] = None
+    recommendedPartnerActions: Optional[List[Dict[str, Any]]] = None
+
 
 # --- Feedback Schemas ---
 
@@ -299,5 +346,104 @@ class AuthResponse(BaseModel):
     token: str
     user: UserProfileResponse
     message: str = "Success"
+
+# --- Sleep Schemas ---
+
+class SleepLogCreateRequest(BaseModel):
+    date: Optional[str] = None
+    hours: int = 7
+    minutes: int = 0
+    quality: str = "Good"
+    qualityEmoji: Optional[str] = "😴"
+
+class SleepLogResponse(BaseModel):
+    id: str
+    userId: str
+    date: Union[str, date]
+    hours: int
+    minutes: int
+    quality: str
+    qualityEmoji: str
+    createdAt: Optional[str] = None
+
+# --- Medication Schemas ---
+
+class MedicationCreateRequest(BaseModel):
+    name: str
+    dosage: Optional[str] = "1 tablet"
+    scheduleTime: Optional[str] = "08:00 AM"
+    reminderEnabled: Optional[bool] = True
+
+class MedicationResponse(BaseModel):
+    id: str
+    userId: str
+    name: str
+    dosage: str
+    scheduleTime: str
+    reminderEnabled: bool
+    createdAt: Optional[str] = None
+
+# --- Activity Schemas ---
+
+class ActivityLogCreateRequest(BaseModel):
+    date: Optional[str] = None
+    steps: int = 0
+    stepGoal: int = 8000
+    activeMinutes: int = 0
+
+class ActivityLogResponse(BaseModel):
+    id: str
+    userId: str
+    date: Union[str, date]
+    steps: int
+    stepGoal: int
+    activeMinutes: int
+
+# --- Notification Schemas ---
+
+class InAppNotificationResponse(BaseModel):
+    id: str
+    userId: str
+    senderId: Optional[str] = None
+    senderName: Optional[str] = None
+    senderEmail: Optional[str] = None
+    type: str
+    title: str
+    message: str
+    referenceId: Optional[str] = None
+    status: str
+    data: Optional[Dict[str, Any]] = None
+    createdAt: str
+
+# --- Clinic and Healthcare Provider Schemas ---
+
+class DoctorSpecialtyInfo(BaseModel):
+    name: str
+    specialty: str
+    qualification: Optional[str] = None
+    isVerified: bool = True
+
+class ClinicResponse(BaseModel):
+    id: str
+    name: str
+    facilityType: str  # "clinic", "hospital", "specialist_center"
+    address: str
+    city: str
+    distanceKm: Optional[str] = None
+    distanceNumericKm: Optional[float] = None
+    phone: Optional[str] = None
+    contactAvailable: bool = True
+    directionsUrl: str
+    latitude: float
+    longitude: float
+    rating: Optional[float] = None
+    reviewsCount: Optional[int] = None
+    operatingHours: Optional[str] = None
+    doctors: List[DoctorSpecialtyInfo] = []
+    doctorDataAvailable: bool = True
+    doctorUnavailableNotice: Optional[str] = None
+    isVerified: bool = True
+    verificationSource: str
+
 
 

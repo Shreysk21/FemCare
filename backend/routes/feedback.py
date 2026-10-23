@@ -5,17 +5,19 @@ from sqlalchemy.orm import Session
 try:
     from ..database import get_db, FeedbackSubmission, UserProfile
     from ..schemas import FeedbackCreateRequest, FeedbackResponse
+    from .auth import get_current_user_id
 except (ImportError, ValueError):
     from database import get_db, FeedbackSubmission, UserProfile
     from schemas import FeedbackCreateRequest, FeedbackResponse
+    from routes.auth import get_current_user_id
 
 router = APIRouter(prefix="/api/feedback", tags=["Feedback"])
 
 @router.get("/my", response_model=List[FeedbackResponse])
-def get_my_feedback(db: Session = Depends(get_db)):
+def get_my_feedback(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Retrieve all feedback submissions submitted by the user."""
     feedbacks = db.query(FeedbackSubmission).filter(
-        FeedbackSubmission.user_id == "usr_101"
+        FeedbackSubmission.user_id == user_id
     ).order_by(FeedbackSubmission.created_at.desc()).all()
 
     return [
@@ -39,7 +41,7 @@ def get_my_feedback(db: Session = Depends(get_db)):
     ]
 
 @router.post("", response_model=FeedbackResponse)
-def submit_feedback(req: FeedbackCreateRequest, db: Session = Depends(get_db)):
+def submit_feedback(req: FeedbackCreateRequest, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """
     Submit user or healthcare professional feedback with role validation.
     Doctor submissions are stored with is_verified=False (unverified by default)
@@ -52,18 +54,11 @@ def submit_feedback(req: FeedbackCreateRequest, db: Session = Depends(get_db)):
     if clean_category not in ["user", "doctor"]:
         raise HTTPException(status_code=400, detail="Feedback category must be 'user' or 'doctor'")
 
-    # Ensure profile exists
-    profile = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
-    if not profile:
-        profile = UserProfile(id="usr_101")
-        db.add(profile)
-        db.flush()
-
     new_id = f"fb_{int(datetime.utcnow().timestamp() * 1000)}"
 
     feedback = FeedbackSubmission(
         id=new_id,
-        user_id="usr_101",
+        user_id=user_id,
         category=clean_category,
         rating=req.rating,
         usability_feedback=req.usabilityFeedback or "",

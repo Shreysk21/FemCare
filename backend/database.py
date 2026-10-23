@@ -50,7 +50,15 @@ else:
     if "sqlite" not in DATABASE_URL:
         connect_args["sslmode"] = "require"
 
-    engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+        pool_recycle=300,
+        pool_timeout=30,
+        connect_args=connect_args
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -82,10 +90,14 @@ class UserProfile(Base):
     symptoms = relationship("SymptomLog", back_populates="user", cascade="all, delete-orphan")
     moods = relationship("MoodLog", back_populates="user", cascade="all, delete-orphan")
     hydration_logs = relationship("HydrationLog", back_populates="user", cascade="all, delete-orphan")
-    circle_members = relationship("CircleMember", back_populates="user", cascade="all, delete-orphan")
+    circle_members = relationship("CircleMember", foreign_keys="CircleMember.user_id", back_populates="user", cascade="all, delete-orphan")
+    notifications = relationship("InAppNotification", foreign_keys="InAppNotification.user_id", back_populates="user", cascade="all, delete-orphan")
     feedbacks = relationship("FeedbackSubmission", back_populates="user", cascade="all, delete-orphan")
     migraine_logs = relationship("MigraineLog", back_populates="user", cascade="all, delete-orphan")
     pcod_logs = relationship("PcodLog", back_populates="user", cascade="all, delete-orphan")
+    sleep_logs = relationship("SleepLog", back_populates="user", cascade="all, delete-orphan")
+    medications = relationship("Medication", back_populates="user", cascade="all, delete-orphan")
+    activity_logs = relationship("ActivityLog", back_populates="user", cascade="all, delete-orphan")
 
 
 class Cycle(Base):
@@ -186,19 +198,40 @@ class CircleMember(Base):
 
     id = Column(String, primary_key=True)
     user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), default="usr_101")
+    recipient_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), nullable=True)
     name = Column(String, nullable=False)
     role = Column(String, nullable=False, default="Partner")
     email = Column(String, nullable=False)
     sync_code = Column(String, nullable=False)
-    status = Column(String, default="Connected & Syncing")
+    status = Column(String, default="pending")  # "pending", "accepted", "declined", "revoked", "Connected & Syncing"
     avatar = Column(String, default="💖")
     share_phase_and_window = Column(Boolean, default=True)
     share_emotional_state = Column(Boolean, default=True)
     share_specific_symptoms = Column(Boolean, default=False)
     share_private_notes = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime,default=datetime.utcnow,onupdate=datetime.utcnow)
-    user = relationship("UserProfile", back_populates="circle_members")
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("UserProfile", foreign_keys=[user_id], back_populates="circle_members")
+    recipient = relationship("UserProfile", foreign_keys=[recipient_id])
+
+
+class InAppNotification(Base):
+    __tablename__ = "in_app_notifications"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    sender_id = Column(String, ForeignKey("profiles.id", ondelete="SET NULL"), nullable=True)
+    type = Column(String, nullable=False)  # "partner_share_request", "share_response", "care_gesture", "system"
+    title = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    reference_id = Column(String, nullable=True)
+    status = Column(String, default="unread")  # "unread", "read", "archived"
+    data = Column(Text, nullable=True)  # JSON payload
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", foreign_keys=[user_id], back_populates="notifications")
+    sender = relationship("UserProfile", foreign_keys=[sender_id])
 
 
 class FeedbackSubmission(Base):
@@ -257,6 +290,49 @@ class PcodLog(Base):
     user = relationship("UserProfile", back_populates="pcod_logs")
 
 
+class SleepLog(Base):
+    __tablename__ = "sleep_logs"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    date = Column(FlexibleDate, nullable=False)
+    hours = Column(Integer, default=7)
+    minutes = Column(Integer, default=0)
+    quality = Column(String, default="Good")  # "Excellent", "Good", "Fair", "Restless"
+    quality_emoji = Column(String, default="😴")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="sleep_logs")
+
+
+class Medication(Base):
+    __tablename__ = "medications"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, nullable=False)
+    dosage = Column(String, default="1 tablet")
+    schedule_time = Column(String, default="08:00 AM")
+    reminder_enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="medications")
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    date = Column(FlexibleDate, nullable=False)
+    steps = Column(Integer, default=0)
+    step_goal = Column(Integer, default=8000)
+    active_minutes = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("UserProfile", back_populates="activity_logs")
+
+
 def get_db():
     db = SessionLocal()
     try:
@@ -290,6 +366,21 @@ def init_db():
                 conn.execute(text(f"ALTER TABLE profiles ADD COLUMN track_pcod BOOLEAN DEFAULT {bool_default}"))
             if "track_migraine" not in existing_cols:
                 conn.execute(text(f"ALTER TABLE profiles ADD COLUMN track_migraine BOOLEAN DEFAULT {bool_default}"))
+
+            # Check circle_members columns
+            circle_cols = []
+            if "sqlite" in str(engine.url):
+                res = conn.execute(text("PRAGMA table_info(circle_members)"))
+                circle_cols = [row[1] for row in res.fetchall()]
+            else:
+                res = conn.execute(text(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name = 'circle_members'"
+                ))
+                circle_cols = [row[0] for row in res.fetchall()]
+
+            if "recipient_id" not in circle_cols:
+                conn.execute(text("ALTER TABLE circle_members ADD COLUMN recipient_id VARCHAR REFERENCES profiles(id) ON DELETE CASCADE"))
+
             conn.commit()
         except Exception as e:
             # Table might be freshly created or already up to date

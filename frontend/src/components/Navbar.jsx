@@ -20,6 +20,7 @@ export const Navbar = () => {
     isLoggedIn,
     user,
     setAuthSubView,
+    unreadNotificationCount,
     t
   } = useApp();
 
@@ -165,9 +166,13 @@ export const Navbar = () => {
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4 text-pink-600 dark:text-pink-400" />
-              {smartAlertData?.hasAlert && (
+              {unreadNotificationCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-pink-600 text-white text-[9px] font-bold flex items-center justify-center animate-pulse shadow-xs">
+                  {unreadNotificationCount}
+                </span>
+              ) : smartAlertData?.hasAlert ? (
                 <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${smartAlertData.status === 'urgent' ? 'bg-rose-600 animate-ping' : 'bg-amber-500'}`} />
-              )}
+              ) : null}
             </button>
 
             {/* Theme Palette Button */}

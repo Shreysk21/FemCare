@@ -74,6 +74,26 @@ export const api = {
     return request('/cycles');
   },
 
+  async createCycle(cycleData) {
+    return request('/cycles', {
+      method: 'POST',
+      body: JSON.stringify(cycleData),
+    });
+  },
+
+  async updateCycle(cycleId, cycleData) {
+    return request(`/cycles/${cycleId}`, {
+      method: 'PUT',
+      body: JSON.stringify(cycleData),
+    });
+  },
+
+  async deleteCycle(cycleId) {
+    return request(`/cycles/${cycleId}`, {
+      method: 'DELETE',
+    });
+  },
+
   async logCycleFlow({ startDate, flow, optionalMood, optionalSymptoms }) {
     return request('/cycles/flow', {
       method: 'POST',
@@ -140,6 +160,60 @@ export const api = {
     });
   },
 
+  async deleteMood(moodId) {
+    return request(`/moods/${moodId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // --- SLEEP LOGS ---
+  async getSleepLogs() {
+    return request('/sleep');
+  },
+
+  async addSleepLog(sleepData) {
+    return request('/sleep', {
+      method: 'POST',
+      body: JSON.stringify(sleepData),
+    });
+  },
+
+  async deleteSleepLog(sleepId) {
+    return request(`/sleep/${sleepId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // --- MEDICATIONS ---
+  async getMedications() {
+    return request('/medications');
+  },
+
+  async addMedication(medData) {
+    return request('/medications', {
+      method: 'POST',
+      body: JSON.stringify(medData),
+    });
+  },
+
+  async deleteMedication(medId) {
+    return request(`/medications/${medId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // --- ACTIVITY & LIFESTYLE ---
+  async getActivityLogs() {
+    return request('/activity');
+  },
+
+  async addActivityLog(activityData) {
+    return request('/activity', {
+      method: 'POST',
+      body: JSON.stringify(activityData),
+    });
+  },
+
   // --- HYDRATION ---
   async getHydration() {
     return request('/hydration');
@@ -171,6 +245,23 @@ export const api = {
     });
   },
 
+  async respondToCircleShare(memberId, action) {
+    return request(`/circle-care/${memberId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    });
+  },
+
+  async revokeCircleShare(memberId) {
+    return request(`/circle-care/${memberId}/revoke`, {
+      method: 'POST',
+    });
+  },
+
+  async getSharedWithMe() {
+    return request('/circle-care/shared-with-me');
+  },
+
   async updateMemberPermissions(memberId, permissions) {
     return request(`/circle-care/${memberId}/permissions`, {
       method: 'PATCH',
@@ -184,6 +275,42 @@ export const api = {
     return request(`/circle-care/${memberId}`, {
       method: 'DELETE',
     });
+  },
+
+  // --- IN-APP NOTIFICATIONS ---
+  async getNotifications() {
+    return request('/notifications');
+  },
+
+  async markNotificationRead(notificationId) {
+    return request(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  },
+
+  async markAllNotificationsRead() {
+    return request('/notifications/read-all', {
+      method: 'POST',
+    });
+  },
+
+  async deleteNotification(notificationId) {
+    return request(`/notifications/${notificationId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // --- NEARBY CLINICS & DOCTORS ---
+  async getNearbyClinics({ latitude, longitude, query, radiusKm = 15, facilityType = 'all' } = {}) {
+    const params = new URLSearchParams();
+    if (latitude != null) params.append('latitude', latitude);
+    if (longitude != null) params.append('longitude', longitude);
+    if (query) params.append('query', query);
+    if (radiusKm != null) params.append('radius_km', radiusKm);
+    if (facilityType) params.append('facility_type', facilityType);
+
+    const queryStr = params.toString();
+    return request(`/clinics/nearby${queryStr ? `?${queryStr}` : ''}`);
   },
 
   // --- FEEDBACK & REVIEWS ---

@@ -98,17 +98,17 @@ export const CrampSosModal = () => {
 
           <div className="grid grid-cols-3 gap-2">
             {[
-              { id: 'Mild', label: 'Mild (1-3)', icon: '🟢', color: 'border-emerald-300 bg-emerald-50 text-emerald-900' },
-              { id: 'Moderate', label: 'Moderate (4-6)', icon: '🟡', color: 'border-amber-300 bg-amber-50 text-amber-900' },
-              { id: 'Severe', label: 'Severe (7-10)', icon: '🔴', color: 'border-rose-300 bg-rose-50 text-rose-900' }
+              { id: 'Mild', label: 'Mild (1-3)', icon: '🟢', color: 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-100' },
+              { id: 'Moderate', label: 'Moderate (4-6)', icon: '🟡', color: 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/80 text-amber-950 dark:text-amber-100' },
+              { id: 'Severe', label: 'Severe (7-10)', icon: '🔴', color: 'border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/80 text-rose-950 dark:text-rose-100' }
             ].map((p) => {
               const isSelected = sosPainLevel === p.id;
               return (
                 <button
                   key={p.id}
                   onClick={() => handlePainLog(p.id)}
-                  className={`p-3 rounded-xl border font-bold text-center transition-all ${p.color} ${
-                    isSelected ? 'ring-4 ring-pink-500 scale-105 shadow-md' : 'opacity-80 hover:opacity-100'
+                  className={`p-3 rounded-xl border font-black text-center transition-all ${p.color} ${
+                    isSelected ? 'ring-4 ring-pink-500 scale-105 shadow-md' : 'opacity-90 hover:opacity-100'
                   }`}
                 >
                   <div className="text-base mb-0.5">{p.icon}</div>

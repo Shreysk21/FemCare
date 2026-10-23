@@ -2,12 +2,14 @@ from sqlalchemy.orm import Session
 try:
     from .database import (
         UserProfile, Cycle, CycleFlowLog, SymptomLog, MoodLog,
-        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog
+        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog,
+        SleepLog, Medication, ActivityLog
     )
 except (ImportError, ValueError):
     from database import (
         UserProfile, Cycle, CycleFlowLog, SymptomLog, MoodLog,
-        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog
+        HydrationLog, HydrationEntry, CircleMember, FeedbackSubmission, MigraineLog, PcodLog,
+        SleepLog, Medication, ActivityLog
     )
 
 DEMO_PASSWORD_HASH = "$pbkdf2-sha256$29000$.T9nTGmNsfYeo9Ra691byw$8JIJpUFMqdG0FLnyOBteA/UMaWr8rKBXAtebLOouCg0"
@@ -98,6 +100,22 @@ def seed_initial_data(db: Session):
                 notes="Light spotting observed 2 days prior to expected cycle."
             )
             db.add_all([pcod1, pcod2])
+
+        if db.query(SleepLog).filter(SleepLog.user_id == "usr_101").count() == 0:
+            slp1 = SleepLog(id="slp_001", user_id="usr_101", date="2026-09-30", hours=7, minutes=30, quality="Good", quality_emoji="😴")
+            slp2 = SleepLog(id="slp_002", user_id="usr_101", date="2026-09-29", hours=8, minutes=0, quality="Excellent", quality_emoji="🌟")
+            slp3 = SleepLog(id="slp_003", user_id="usr_101", date="2026-09-28", hours=6, minutes=45, quality="Restless", quality_emoji="🥱")
+            db.add_all([slp1, slp2, slp3])
+
+        if db.query(Medication).filter(Medication.user_id == "usr_101").count() == 0:
+            med1 = Medication(id="med_001", user_id="usr_101", name="Iron & Vitamin C", dosage="1 tablet", schedule_time="08:00 AM", reminder_enabled=True)
+            med2 = Medication(id="med_002", user_id="usr_101", name="Magnesium Glycinate", dosage="200mg", schedule_time="09:30 PM", reminder_enabled=True)
+            db.add_all([med1, med2])
+
+        if db.query(ActivityLog).filter(ActivityLog.user_id == "usr_101").count() == 0:
+            act1 = ActivityLog(id="act_001", user_id="usr_101", date="2026-09-30", steps=6400, step_goal=8000, active_minutes=35)
+            act2 = ActivityLog(id="act_002", user_id="usr_101", date="2026-09-29", steps=8200, step_goal=8000, active_minutes=45)
+            db.add_all([act1, act2])
 
         db.commit()
         return  # Rest of profile data already seeded

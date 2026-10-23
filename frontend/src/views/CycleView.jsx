@@ -29,9 +29,9 @@ const PHASES = {
     name: 'Menstrual Phase',
     shortName: 'Menstrual (Period)',
     icon: '🩸',
-    pillBg: 'bg-rose-500 text-white',
-    badgeBg: 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-800',
-    dotColor: 'bg-rose-500',
+    pillBg: 'bg-rose-600 text-white font-bold',
+    badgeBg: 'bg-rose-100 text-rose-950 border-rose-300 dark:bg-rose-950/80 dark:text-rose-100 dark:border-rose-700 font-bold',
+    dotColor: 'bg-rose-600',
     accentColor: '#e11d48',
     tagline: 'Rest, Warmth & Soothing Care (Days 1–5)',
     description: 'Estrogen and progesterone are at their baseline. The uterine lining is shedding. Prioritize warmth, gentle rest, hydration, and soothing care.'
@@ -41,9 +41,9 @@ const PHASES = {
     name: 'Follicular Phase',
     shortName: 'Follicular',
     icon: '🌱',
-    pillBg: 'bg-teal-500 text-white',
-    badgeBg: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950/80 dark:text-teal-200 dark:border-teal-800',
-    dotColor: 'bg-teal-500',
+    pillBg: 'bg-teal-600 text-white font-bold',
+    badgeBg: 'bg-teal-100 text-teal-950 border-teal-300 dark:bg-teal-950/80 dark:text-teal-100 dark:border-teal-700 font-bold',
+    dotColor: 'bg-teal-600',
     accentColor: '#0d9488',
     tagline: 'Energy, Stamina & Mental Clarity (Days 6–11)',
     description: 'Follicle Stimulating Hormone (FSH) promotes egg maturation. Estrogen rises, boosting stamina, focus, and positive mood.'
@@ -53,9 +53,9 @@ const PHASES = {
     name: 'Ovulation & Fertile Phase',
     shortName: 'Ovulation',
     icon: '✨',
-    pillBg: 'bg-purple-600 text-white',
-    badgeBg: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950/80 dark:text-purple-200 dark:border-purple-800',
-    dotColor: 'bg-purple-500',
+    pillBg: 'bg-purple-600 text-white font-bold',
+    badgeBg: 'bg-purple-100 text-purple-950 border-purple-300 dark:bg-purple-950/80 dark:text-purple-100 dark:border-purple-700 font-bold',
+    dotColor: 'bg-purple-600',
     accentColor: '#9333ea',
     tagline: 'Peak Fertility Window & Vitality (Days 12–16)',
     description: 'Luteinizing Hormone (LH) surge triggers ovulation (Day 14). Estrogen peaks, bringing high confidence, vitality, and fertile cervical mucus.'
@@ -65,8 +65,8 @@ const PHASES = {
     name: 'Luteal Phase',
     shortName: 'Luteal',
     icon: '🌙',
-    pillBg: 'bg-amber-500 text-white',
-    badgeBg: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-800',
+    pillBg: 'bg-amber-400 text-slate-950 font-black',
+    badgeBg: 'bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-950/80 dark:text-amber-100 dark:border-amber-700 font-bold',
     dotColor: 'bg-amber-500',
     accentColor: '#d97706',
     tagline: 'Progesterone Surge & Pre-Menstrual (Days 17–28)',
@@ -108,15 +108,15 @@ export const CycleView = () => {
 
   const [activeTab, setActiveTab] = useState('calendar'); // 'calendar' or 'history'
   
-  // Displayed month (Defaults to October 2026)
-  const [displayedMonthDate, setDisplayedMonthDate] = useState(new Date(2026, 9, 1));
+  // Displayed month (Defaults to current month)
+  const [displayedMonthDate, setDisplayedMonthDate] = useState(() => new Date());
   
-  // Selected date on calendar (Defaults to 2026-10-12)
-  const [selectedDate, setSelectedDate] = useState('2026-10-12');
+  // Selected date on calendar (Defaults to today)
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   
   // Modal State for logging phase
   const [phaseModalOpen, setPhaseModalOpen] = useState(false);
-  const [modalDate, setModalDate] = useState('2026-10-12');
+  const [modalDate, setModalDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedPhase, setSelectedPhase] = useState('menstrual');
   const [selectedFlow, setSelectedFlow] = useState('Medium');
   const [periodMarker, setPeriodMarker] = useState('ongoing'); // 'start', 'ongoing', 'end'
@@ -160,9 +160,18 @@ export const CycleView = () => {
         }
       }
 
-      // 3. Mathematical Cycle Projection
+      // 3. Mathematical Cycle Projection (Only when actual cycle history exists)
       const currentCycle = cycles?.[0];
-      const refStartStr = currentCycle?.startDate || user?.lastPeriodStartDate || '2026-09-17';
+      const refStartStr = currentCycle?.startDate || user?.lastPeriodStartDate;
+      if (!refStartStr) {
+        return {
+          phase: null,
+          meta: null,
+          isPredicted: false,
+          isPeriod: false
+        };
+      }
+
       const cycleLength = currentCycle?.length || user?.avgCycleLength || 28;
       const periodDuration = currentCycle?.periodDuration || user?.avgPeriodDuration || 5;
 
@@ -279,9 +288,9 @@ export const CycleView = () => {
   };
 
   const handleGoToToday = () => {
-    const today = new Date(2026, 9, 12); // Oct 12, 2026
-    setDisplayedMonthDate(new Date(2026, 9, 1));
-    setSelectedDate('2026-10-12');
+    const today = new Date();
+    setDisplayedMonthDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDate(today.toISOString().split('T')[0]);
   };
 
   // Click on date cell: Select date & open menstrual phase logging modal
@@ -289,7 +298,7 @@ export const CycleView = () => {
     setSelectedDate(dateStr);
     setModalDate(dateStr);
 
-    const existingInfo = getDayPhaseInfo(dateStr);
+    const existingInfo = getDayPhaseInfo(dateStr) || {};
     setSelectedPhase(existingInfo.phase || 'menstrual');
     setSelectedFlow(existingInfo.flow || 'Medium');
     setSelectedMood(existingInfo.mood || null);
@@ -520,7 +529,7 @@ export const CycleView = () => {
                           {phaseInfo.flow || 'Period'}
                         </span>
                       ) : (
-                        <span className="text-[8px] font-semibold opacity-75 block truncate">
+                        <span className="text-[8px] font-bold text-slate-700 dark:text-slate-300 block truncate">
                           {phaseInfo.meta?.shortName}
                         </span>
                       )}
@@ -531,21 +540,21 @@ export const CycleView = () => {
             </div>
 
             {/* Quick Helper Legend */}
-            <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold" style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}>
+            <div className="pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-[10px] font-bold" style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" />
                 <span>Period (Logged)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full border border-dashed border-rose-500 bg-rose-100 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full border border-dashed border-rose-600 bg-rose-100 inline-block" />
                 <span>Predicted Period</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-teal-500 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-teal-600 inline-block" />
                 <span>Follicular</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-600 inline-block" />
                 <span>Fertile Peak</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -635,7 +644,7 @@ export const CycleView = () => {
                 15 October 2026
               </span>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
               Based on your typical <strong>28-day cycle</strong> and <strong>5-day duration</strong>. Predictions adapt automatically as you log new cycle phases.
             </p>
           </div>
@@ -647,61 +656,77 @@ export const CycleView = () => {
       {activeTab === 'history' && (
         <div className="space-y-3 animate-fade-in">
           <div className="flex items-center justify-between px-1">
-            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
               Recorded Period History ({cycles.length} Cycles)
             </h3>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-700 dark:text-slate-300 font-bold">
               Avg Cycle: {user?.avgCycleLength || 28} days
             </span>
           </div>
 
-          {cycles.map((cyc) => (
-            <div
-              key={cyc.id}
-              className="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
-              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <span>{cyc.startDate} — {cyc.endDate}</span>
-                    {cyc.status === 'current' && (
-                      <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold">
-                        Active Cycle
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Length: <strong>{cyc.length} days</strong> • Period Duration: <strong>{cyc.periodDuration} days</strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setDeleteModalData({ cycleId: cyc.id, date: cyc.startDate })}
-                    className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl transition-colors cursor-pointer"
-                    aria-label="Delete cycle entry"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Mini Flow Logs for this Cycle */}
-              {cyc.flowLogs && cyc.flowLogs.length > 0 && (
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
-                  {cyc.flowLogs.map((fl, fIdx) => (
-                    <span
-                      key={fIdx}
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900"
-                    >
-                      {fl.date.split('-').slice(1).join('/')}: {fl.flow}
-                    </span>
-                  ))}
-                </div>
-              )}
+          {cycles.length === 0 ? (
+            <div className="p-8 text-center rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/60 space-y-3">
+              <div className="text-3xl">🌸</div>
+              <div className="font-extrabold text-sm text-slate-900 dark:text-slate-100">No cycle records yet</div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                When you record your period dates, your complete cycle history, flow records, and duration stats will appear here.
+              </p>
+              <button
+                onClick={() => handleDateClick(new Date().toISOString().split('T')[0])}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                + Log Period Start Date
+              </button>
             </div>
-          ))}
+          ) : (
+            cycles.map((cyc) => (
+              <div
+                key={cyc.id}
+                className="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
+                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-card)' }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                      <span>{cyc.startDate} — {cyc.endDate || 'Ongoing'}</span>
+                      {cyc.status === 'current' && (
+                        <span className="text-[10px] bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 px-2 py-0.5 rounded-full font-extrabold">
+                          Active Cycle
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-700 dark:text-slate-300 font-medium mt-0.5">
+                      Length: <strong>{cyc.length} days</strong> • Period Duration: <strong>{cyc.periodDuration} days</strong>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setDeleteModalData({ cycleId: cyc.id, date: cyc.startDate })}
+                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-xl transition-colors cursor-pointer"
+                      aria-label="Delete cycle entry"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mini Flow Logs for this Cycle */}
+                {cyc.flowLogs && cyc.flowLogs.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-1.5">
+                    {cyc.flowLogs.map((fl, fIdx) => (
+                      <span
+                        key={fIdx}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900"
+                      >
+                        {fl.date.split('-').slice(1).join('/')}: {fl.flow}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       )}
 
@@ -737,7 +762,7 @@ export const CycleView = () => {
 
           {/* Phase Selector - 4 Clear Options */}
           <div>
-            <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2">
+            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 mb-2">
               1. Choose Cycle Phase
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -751,7 +776,7 @@ export const CycleView = () => {
                     className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       isCurrent
                         ? `${ph.pillBg} shadow-md ring-2 ring-offset-1 ring-slate-400 dark:ring-offset-slate-900 scale-102`
-                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                        : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-400 text-slate-900 dark:text-slate-100'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
@@ -761,7 +786,7 @@ export const CycleView = () => {
                     <div className="font-extrabold text-xs">
                       {ph.name}
                     </div>
-                    <div className={`text-[10px] mt-0.5 line-clamp-1 ${isCurrent ? 'opacity-90' : 'text-slate-500 dark:text-slate-400'}`}>
+                    <div className={`text-[10px] mt-0.5 line-clamp-1 font-medium ${isCurrent ? 'opacity-95' : 'text-slate-600 dark:text-slate-300'}`}>
                       {ph.tagline}
                     </div>
                   </button>
@@ -790,8 +815,8 @@ export const CycleView = () => {
                     onClick={() => setSelectedFlow(f.id)}
                     className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                       selectedFlow === f.id
-                        ? 'border-rose-500 bg-rose-500 text-white font-bold ring-2 ring-rose-400 shadow-xs'
-                        : 'border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300'
+                        ? 'border-rose-600 bg-rose-600 text-white font-extrabold ring-2 ring-rose-400 shadow-xs'
+                        : 'border-rose-200 dark:border-rose-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <div className="text-lg leading-none mb-1">{f.icon}</div>
@@ -802,7 +827,7 @@ export const CycleView = () => {
 
               {/* Period Cycle Marker */}
               <div className="pt-2 border-t border-rose-200/80 dark:border-rose-900 flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px]">
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-[11px]">
                   Cycle Marker:
                 </span>
                 <div className="flex gap-1.5">
@@ -818,7 +843,7 @@ export const CycleView = () => {
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold border cursor-pointer transition-colors ${
                         periodMarker === mark.id
                           ? 'bg-rose-600 text-white border-rose-600'
-                          : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                          : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
                       {mark.label}
@@ -832,10 +857,10 @@ export const CycleView = () => {
           {/* Optional Mood Selector */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 Optional: How is your mood today?
               </label>
-              <span className="text-[10px] text-slate-400 font-semibold">Optional</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Optional</span>
             </div>
             <div className="grid grid-cols-6 gap-1.5">
               {MOOD_OPTIONS.map((m) => {
@@ -847,8 +872,8 @@ export const CycleView = () => {
                     onClick={() => setSelectedMood(isSelected ? null : m)}
                     className={`py-2 px-1 rounded-xl border text-center transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 ring-2 ring-amber-400 font-bold'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 ring-2 ring-amber-400 font-bold text-amber-950 dark:text-amber-100'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
                     }`}
                   >
                     <div className="text-lg leading-none">{m.emoji}</div>
@@ -862,10 +887,10 @@ export const CycleView = () => {
           {/* Optional Common Symptoms */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 Optional: Symptoms experienced
               </label>
-              <span className="text-[10px] text-slate-400 font-semibold">Optional</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">Optional</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {COMMON_SYMPTOMS.map((sym) => {
@@ -877,12 +902,12 @@ export const CycleView = () => {
                     onClick={() => toggleSymptomSelection(sym)}
                     className={`p-2 rounded-xl border text-left flex items-center gap-1.5 transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200 font-bold ring-2 ring-purple-400'
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/60 text-purple-900 dark:text-purple-100 font-extrabold ring-2 ring-purple-400'
+                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
                     }`}
                   >
                     <span className="text-sm">{sym.icon}</span>
-                    <span className="text-[11px] truncate">{sym.name}</span>
+                    <span className="text-[11px] truncate font-medium">{sym.name}</span>
                   </button>
                 );
               })}
@@ -932,13 +957,13 @@ export const CycleView = () => {
         title="Delete Period Record?"
       >
         <div className="space-y-4 text-center">
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
             Are you sure you want to delete the period record starting on <strong>{deleteModalData?.date}</strong>?
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setDeleteModalData(null)}
-              className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-bold cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
             >
               Cancel
             </button>
@@ -947,7 +972,7 @@ export const CycleView = () => {
                 deletePeriodEntry(deleteModalData.cycleId, deleteModalData.date);
                 setDeleteModalData(null);
               }}
-              className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md cursor-pointer transition-colors"
             >
               Delete Record
             </button>

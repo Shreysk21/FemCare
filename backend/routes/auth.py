@@ -33,26 +33,31 @@ def decode_access_token(token: str):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication token.")
 
 def get_current_user_id(authorization: str = Header(None)) -> str:
-    """Dependency to extract user_id from Authorization: Bearer <token>. Fallbacks to 'usr_101' if unauthenticated."""
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1].strip()
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-            uid = payload.get("sub")
-            if uid:
-                return uid
-        except Exception:
-            pass
-    return "usr_101"
+    """Strictly extracts user_id from Authorization: Bearer <token>. Unauthenticated requests raise 401."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please sign in."
+        )
+    token = authorization.split(" ")[1].strip()
+    payload = decode_access_token(token)
+    uid = payload.get("sub")
+    if not uid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token payload."
+        )
+    return uid
 
 def to_profile_response(p: UserProfile) -> UserProfileResponse:
+    last_p = str(p.last_period_start_date) if getattr(p, "last_period_start_date", None) else None
     return UserProfileResponse(
         id=p.id,
         name=p.name,
         email=p.email,
         avgCycleLength=p.avg_cycle_length or 28,
         avgPeriodDuration=p.avg_period_duration or 5,
-        lastPeriodStartDate=str(p.last_period_start_date or datetime.utcnow().strftime("%Y-%m-%d")),
+        lastPeriodStartDate=last_p,
         theme=p.theme or "light",
         textSize=p.text_size or "normal",
         privacyMode=p.privacy_mode or "discreet",
@@ -87,7 +92,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
         password_hash=pw_hash,
         avg_cycle_length=28,
         avg_period_duration=5,
-        last_period_start_date=today_str,
+        last_period_start_date=None,  # Brand new user starts with 0 health records
         theme="light",
         text_size="normal",
         privacy_mode="discreet",
@@ -99,32 +104,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
         joined_date=today_str
     )
     db.add(new_user)
-
-    # Initialize starter cycle for the new user so dashboard works right away
-    starter_cycle = Cycle(
-        id=f"cyc_{int(datetime.utcnow().timestamp() * 1000)}",
-        user_id=user_id,
-        start_date=today_str,
-        length=28,
-        period_duration=5,
-        status="current",
-        phase="Follicular Phase",
-        notes="Welcome to FemCare!"
-    )
-    db.add(starter_cycle)
-
-    # Initialize hydration goal
-    starter_hydration = HydrationLog(
-        id=f"hyd_{int(datetime.utcnow().timestamp() * 1000)}",
-        user_id=user_id,
-        date=today_str,
-        current_ml=0,
-        goal_ml=2000,
-        glasses=0,
-        target_glasses=8
-    )
-    db.add(starter_hydration)
-
+    # Zero initial records created: new users start with an empty dashboard
     db.commit()
     db.refresh(new_user)
 
@@ -138,7 +118,13 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=AuthResponse)
 def login(req: LoginRequest, db: Session = Depends(get_db)):
     email_clean = req.email.strip().lower()
-    user = db.query(UserProfile).filter(UserProfile.email.ilike(email_clean)).first()
+    
+    # Support demo login alias
+    if email_clean in ("demo@femcare.com", "demo@example.com"):
+        user = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
+    else:
+        user = db.query(UserProfile).filter(UserProfile.email.ilike(email_clean)).first()
+
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
 

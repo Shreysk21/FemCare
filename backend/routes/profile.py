@@ -11,37 +11,38 @@ except (ImportError, ValueError):
 
 router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
-@router.get("", response_model=UserProfileResponse)
-def get_profile(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
-    if not profile:
-        profile = db.query(UserProfile).filter(UserProfile.id == "usr_101").first()
-    if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+def _format_profile(profile: UserProfile) -> UserProfileResponse:
+    last_p = str(profile.last_period_start_date) if getattr(profile, "last_period_start_date", None) else None
     return UserProfileResponse(
         id=profile.id,
         name=profile.name,
         email=profile.email,
-        avgCycleLength=profile.avg_cycle_length,
-        avgPeriodDuration=profile.avg_period_duration,
-        lastPeriodStartDate=profile.last_period_start_date,
-        theme=profile.theme,
-        textSize=profile.text_size,
-        privacyMode=profile.privacy_mode,
+        avgCycleLength=profile.avg_cycle_length or 28,
+        avgPeriodDuration=profile.avg_period_duration or 5,
+        lastPeriodStartDate=last_p,
+        theme=profile.theme or "light",
+        textSize=profile.text_size or "normal",
+        privacyMode=profile.privacy_mode or "discreet",
         language=getattr(profile, "language", "en") or "en",
         trackPcod=bool(getattr(profile, "track_pcod", False)),
         trackMigraine=bool(getattr(profile, "track_migraine", False)),
-        locationApproved=profile.location_approved,
-        city=profile.city,
-        joinedDate=profile.joined_date
+        locationApproved=bool(profile.location_approved),
+        city=profile.city or "San Francisco, CA",
+        joinedDate=str(profile.joined_date) if profile.joined_date else None
     )
+
+@router.get("", response_model=UserProfileResponse)
+def get_profile(user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
+    profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return _format_profile(profile)
 
 @router.put("", response_model=UserProfileResponse)
 def update_profile(update_data: UserProfileUpdate, user_id: str = Depends(get_current_user_id), db: Session = Depends(get_db)):
     profile = db.query(UserProfile).filter(UserProfile.id == user_id).first()
     if not profile:
-        profile = UserProfile(id=user_id)
-        db.add(profile)
+        raise HTTPException(status_code=404, detail="Profile not found")
 
     if update_data.name is not None:
         profile.name = update_data.name
@@ -72,22 +73,4 @@ def update_profile(update_data: UserProfileUpdate, user_id: str = Depends(get_cu
 
     db.commit()
     db.refresh(profile)
-
-    return UserProfileResponse(
-        id=profile.id,
-        name=profile.name,
-        email=profile.email,
-        avgCycleLength=profile.avg_cycle_length,
-        avgPeriodDuration=profile.avg_period_duration,
-        lastPeriodStartDate=profile.last_period_start_date,
-        theme=profile.theme,
-        textSize=profile.text_size,
-        privacyMode=profile.privacy_mode,
-        language=getattr(profile, "language", "en") or "en",
-        trackPcod=bool(getattr(profile, "track_pcod", False)),
-        trackMigraine=bool(getattr(profile, "track_migraine", False)),
-        locationApproved=profile.location_approved,
-        city=profile.city,
-        joinedDate=profile.joined_date
-    )
-
+    return _format_profile(profile)

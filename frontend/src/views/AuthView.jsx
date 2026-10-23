@@ -14,9 +14,9 @@ export const AuthView = () => {
   } = useApp();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('shreya.patel@example.com');
-  const [password, setPassword] = useState('password123');
-  const [name, setName] = useState('Shreya Patel');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [resetSent, setResetSent] = useState(false);
@@ -66,6 +66,20 @@ export const AuthView = () => {
     setAuthError(null);
   };
 
+  const loginAsDemo = async () => {
+    fillDemoAccount();
+    setIsSubmitting(true);
+    try {
+      await loginUser({
+        email: 'shreya.patel@example.com',
+        password: 'password123',
+        targetView: returnViewAfterAuth || 'home'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center p-4 sm:p-6 relative">
       
@@ -104,15 +118,24 @@ export const AuthView = () => {
             <div className="flex items-center justify-between p-2.5 rounded-2xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900/50 text-[11px]">
               <div className="flex items-center gap-1.5 text-pink-700 dark:text-pink-300 font-medium">
                 <Sparkles className="w-3.5 h-3.5 text-pink-600 shrink-0" />
-                <span>Demo user pre-configured</span>
+                <span>Demo account ready</span>
               </div>
-              <button
-                type="button"
-                onClick={fillDemoAccount}
-                className="px-2.5 py-1 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-[10px] cursor-pointer transition-all"
-              >
-                Auto-Fill
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={fillDemoAccount}
+                  className="px-2.5 py-1 rounded-xl border border-pink-300 bg-white dark:bg-slate-900 text-pink-700 dark:text-pink-300 font-bold text-[10px] cursor-pointer hover:bg-pink-100 transition-all"
+                >
+                  Auto-Fill
+                </button>
+                <button
+                  type="button"
+                  onClick={loginAsDemo}
+                  className="px-2.5 py-1 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-[10px] cursor-pointer transition-all shadow-xs"
+                >
+                  1-Tap Demo
+                </button>
+              </div>
             </div>
           )}
 

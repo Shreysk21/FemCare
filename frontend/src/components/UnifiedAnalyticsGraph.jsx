@@ -1,27 +1,127 @@
-import React, { useState } from 'react';
-import { Filter, Sparkles, Check } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Filter, Sparkles, Check, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const UnifiedAnalyticsGraph = () => {
-  const { showToast, privacyShield } = useApp();
+  const {
+    showToast,
+    privacyShield,
+    cycles,
+    symptomLogs,
+    moodLogs,
+    sleepLogs,
+    hydration,
+    activityLogs,
+    phaseLogs,
+    setCurrentView
+  } = useApp();
 
-  // 14-day sample dataset mapping normalized values (0 to 100 scale)
-  const timelineData = [
-    { day: "Sep 17", phase: "Menstrual Phase 🩸", wellnessScore: 55, period: 90, mood: 40, symptom: 80, sleep: 60, water: 60, steps: 40, note: "Heavy flow, mild abdominal cramps." },
-    { day: "Sep 18", phase: "Menstrual Phase 🩸", wellnessScore: 62, period: 80, mood: 50, symptom: 70, sleep: 65, water: 70, steps: 45, note: "Medium flow, warm compress helped." },
-    { day: "Sep 19", phase: "Menstrual Phase 🩸", wellnessScore: 70, period: 60, mood: 60, symptom: 50, sleep: 70, water: 80, steps: 55, note: "Flow easing down, fatigue improving." },
-    { day: "Sep 20", phase: "Menstrual Phase 🩸", wellnessScore: 78, period: 40, mood: 70, symptom: 30, sleep: 75, water: 85, steps: 60, note: "Light flow, stayed well hydrated." },
-    { day: "Sep 21", phase: "Menstrual Phase 🩸", wellnessScore: 85, period: 20, mood: 80, symptom: 20, sleep: 80, water: 90, steps: 70, note: "Period ending, feeling energetic." },
-    { day: "Sep 22", phase: "Follicular Phase 🌱", wellnessScore: 88, period: 0, mood: 80, symptom: 10, sleep: 75, water: 80, steps: 75, note: "Energy high, clear skin." },
-    { day: "Sep 23", phase: "Follicular Phase 🌱", wellnessScore: 92, period: 0, mood: 90, symptom: 10, sleep: 80, water: 95, steps: 80, note: "Great mood & motivation!" },
-    { day: "Sep 24", phase: "Follicular Phase 🌱", wellnessScore: 95, period: 0, mood: 90, symptom: 0, sleep: 85, water: 90, steps: 85, note: "Peak vitality, morning workout." },
-    { day: "Sep 25", phase: "Follicular Phase 🌱", wellnessScore: 88, period: 0, mood: 80, symptom: 10, sleep: 75, water: 80, steps: 75, note: "Steady focus throughout day." },
-    { day: "Sep 26", phase: "Ovulatory Phase 🌸", wellnessScore: 84, period: 0, mood: 70, symptom: 20, sleep: 70, water: 75, steps: 65, note: "Egg-white mucus observed." },
-    { day: "Sep 27", phase: "Ovulatory Phase 🌸", wellnessScore: 82, period: 0, mood: 70, symptom: 30, sleep: 70, water: 80, steps: 60, note: "Slight ovulation twinges." },
-    { day: "Sep 28", phase: "Luteal Phase 🌙", wellnessScore: 86, period: 0, mood: 80, symptom: 20, sleep: 80, water: 85, steps: 68, note: "Calm evening, restful sleep." },
-    { day: "Sep 29", phase: "Luteal Phase 🌙", wellnessScore: 72, period: 0, mood: 60, symptom: 40, sleep: 68, water: 70, steps: 68, note: "Mild bloating in evening." },
-    { day: "Sep 30", phase: "Luteal Phase 🌙", wellnessScore: 78, period: 20, mood: 80, symptom: 50, sleep: 73, water: 80, steps: 54, note: "Pre-period spotting, relaxed pace." }
-  ];
+  // Dynamically derive timelineData from actual user database records
+  const timelineData = useMemo(() => {
+    const dateSet = new Set();
+    (cycles || []).forEach(c => {
+      if (c.startDate) dateSet.add(c.startDate);
+      (c.flowLogs || []).forEach(f => {
+        if (f.date) dateSet.add(f.date);
+      });
+    });
+    (symptomLogs || []).forEach(s => { if (s.date) dateSet.add(s.date); });
+    (moodLogs || []).forEach(m => { if (m.date) dateSet.add(m.date); });
+    (sleepLogs || []).forEach(sl => { if (sl.date) dateSet.add(sl.date); });
+    (activityLogs || []).forEach(a => { if (a.date) dateSet.add(a.date); });
+    Object.keys(phaseLogs || {}).forEach(d => dateSet.add(d));
+
+    const sortedDates = Array.from(dateSet).sort();
+    if (sortedDates.length === 0) return [];
+
+    return sortedDates.map(dateStr => {
+      // 1. Period flow score (0-100)
+      let periodScore = 0;
+      let flowLabel = null;
+      for (const c of (cycles || [])) {
+        const fl = c.flowLogs?.find(f => f.date === dateStr);
+        if (fl) {
+          flowLabel = fl.flow;
+          break;
+        }
+      }
+      if (phaseLogs?.[dateStr]?.flow) flowLabel = phaseLogs[dateStr].flow;
+      if (flowLabel === 'Heavy') periodScore = 100;
+      else if (flowLabel === 'Medium') periodScore = 70;
+      else if (flowLabel === 'Light') periodScore = 40;
+      else if (flowLabel === 'Spotting') periodScore = 20;
+
+      // 2. Symptom severity score (0-100)
+      const daySymptoms = (symptomLogs || []).filter(s => s.date === dateStr);
+      let symptomScore = 0;
+      if (daySymptoms.length > 0) {
+        const sevMap = { Severe: 100, Moderate: 65, Mild: 30 };
+        const sum = daySymptoms.reduce((acc, s) => acc + (sevMap[s.severity] || 50), 0);
+        symptomScore = Math.round(sum / daySymptoms.length);
+      }
+
+      // 3. Mood score (0-100)
+      const dayMood = (moodLogs || []).find(m => m.date === dateStr);
+      let moodScore = 60;
+      if (dayMood) {
+        const moodMap = { great: 95, good: 80, calm: 75, normal: 65, okay: 55, low: 35, irritated: 25, stressed: 20 };
+        moodScore = moodMap[dayMood.moodId] || 60;
+      }
+
+      // 4. Sleep score (0-100)
+      const daySleep = (sleepLogs || []).find(s => s.date === dateStr);
+      let sleepScore = 65;
+      if (daySleep) {
+        const totalHrs = (daySleep.hours || 7) + (daySleep.minutes || 0) / 60;
+        sleepScore = Math.min(Math.round((totalHrs / 8) * 100), 100);
+      }
+
+      // 5. Hydration target score (0-100)
+      let waterScore = 70;
+      if (hydration && hydration.date === dateStr && hydration.goalMl) {
+        waterScore = Math.min(Math.round((hydration.currentMl / hydration.goalMl) * 100), 100);
+      }
+
+      // 6. Steps score (0-100)
+      const dayAct = (activityLogs || []).find(a => a.date === dateStr);
+      let stepsScore = 50;
+      if (dayAct && dayAct.stepGoal) {
+        stepsScore = Math.min(Math.round((dayAct.steps / dayAct.stepGoal) * 100), 100);
+      }
+
+      // 7. Wellness score
+      const wellnessScore = Math.round((moodScore * 0.35) + (sleepScore * 0.35) + (waterScore * 0.15) + (Math.max(0, 100 - symptomScore) * 0.15));
+
+      // Phase label
+      const phaseInfo = phaseLogs?.[dateStr]?.phase || (flowLabel ? 'menstrual' : 'follicular');
+      const phaseLabel = phaseInfo === 'menstrual' ? 'Menstrual Phase 🩸'
+        : phaseInfo === 'follicular' ? 'Follicular Phase 🌱'
+        : phaseInfo === 'ovulation' ? 'Ovulatory Phase 🌸'
+        : 'Luteal Phase 🌙';
+
+      const dObj = new Date(dateStr + 'T00:00:00');
+      const dayDisplay = dObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const notesArr = [];
+      if (flowLabel) notesArr.push(`${flowLabel} flow`);
+      if (daySymptoms.length > 0) notesArr.push(daySymptoms.map(s => s.symptomName).join(', '));
+      if (dayMood) notesArr.push(`Mood: ${dayMood.label || dayMood.moodId}`);
+
+      return {
+        dateStr,
+        day: dayDisplay,
+        phase: phaseLabel,
+        wellnessScore,
+        period: periodScore,
+        mood: moodScore,
+        symptom: symptomScore,
+        sleep: sleepScore,
+        water: waterScore,
+        steps: stepsScore,
+        note: notesArr.length > 0 ? notesArr.join('. ') : 'Recorded daily health entry.'
+      };
+    });
+  }, [cycles, symptomLogs, moodLogs, sleepLogs, hydration, activityLogs, phaseLogs]);
 
   // Parameters Config
   const parametersConfig = [
@@ -35,7 +135,7 @@ export const UnifiedAnalyticsGraph = () => {
 
   // Shneiderman's Mantra: Strict Cap of AT MOST 2 Active Compare Metrics
   const [selectedMetrics, setSelectedMetrics] = useState(["symptom", "water"]);
-  const [selectedDayIndex, setSelectedDayIndex] = useState(13); // Sep 30 selected by default
+  const [selectedDayIndex, setSelectedDayIndex] = useState(() => Math.max(0, timelineData.length - 1));
 
   const toggleMetric = (key) => {
     if (selectedMetrics.includes(key)) {
@@ -63,6 +163,12 @@ export const UnifiedAnalyticsGraph = () => {
 
   // Convert timeline data points to SVG coordinates
   const getCoordinates = (key) => {
+    if (timelineData.length === 0) return "";
+    if (timelineData.length === 1) {
+      const yValue = timelineData[0][key];
+      const y = paddingY + chartHeight - (yValue / 100) * chartHeight;
+      return `${paddingX},${y} ${svgWidth - paddingX},${y}`;
+    }
     return timelineData.map((d, index) => {
       const x = paddingX + (index / (timelineData.length - 1)) * chartWidth;
       const yValue = d[key];
@@ -71,7 +177,29 @@ export const UnifiedAnalyticsGraph = () => {
     }).join(" ");
   };
 
-  const selectedDay = timelineData[selectedDayIndex];
+  const safeIndex = Math.min(selectedDayIndex, Math.max(0, timelineData.length - 1));
+  const selectedDay = timelineData[safeIndex];
+
+  if (timelineData.length === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 shadow-sm text-center space-y-3">
+        <div className="text-3xl">📊</div>
+        <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+          No Health Trends Recorded Yet
+        </h3>
+        <p className="text-xs text-slate-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          As you log your daily menstrual flow, symptoms, mood, sleep, and hydration, your personalized comparative trend graph and wellness timeline will appear here.
+        </p>
+        <button
+          onClick={() => setCurrentView('track')}
+          className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+        >
+          <span>+ Log Today's Health Entry</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">

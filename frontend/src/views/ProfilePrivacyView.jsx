@@ -101,7 +101,7 @@ export const ProfilePrivacyView = () => {
 
         {/* Text Scaling */}
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1">
+          <label className="block text-xs font-bold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-1">
             <Type className="w-4 h-4 text-purple-500" />
             <span>{t('profile.textScaling', 'Text Scaling')}</span>
           </label>
@@ -112,8 +112,8 @@ export const ProfilePrivacyView = () => {
                 onClick={() => setTextSize(size)}
                 className={`py-2 rounded-xl border text-center capitalize transition-all ${
                   textSize === size
-                    ? 'border-purple-500 bg-purple-50 text-purple-700'
-                    : 'border-slate-200 text-slate-600'
+                    ? 'border-purple-500 bg-purple-50 text-purple-900 dark:bg-purple-950 dark:text-purple-100 font-black'
+                    : 'border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50'
                 }`}
               >
                 {size}
@@ -151,7 +151,7 @@ export const ProfilePrivacyView = () => {
                 className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                   isSel
                     ? 'border-pink-500 bg-pink-50/60 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 font-extrabold ring-1 ring-pink-400'
-                    : 'border-[var(--border-card)] hover:bg-slate-50 dark:hover:bg-slate-800'
+                    : 'border-[var(--border-card)] text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800'
                 }`}
               >
                 <div className="text-xs font-bold flex items-center justify-between">
@@ -161,7 +161,7 @@ export const ProfilePrivacyView = () => {
                   </span>
                   {isSel && <span className="text-[10px] bg-pink-600 text-white rounded-full px-1.5 py-0.2">✓</span>}
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                <div className="text-[10px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                   {lang.label} • {lang.sub || 'Active'}
                 </div>
               </button>
@@ -241,17 +241,17 @@ export const ProfilePrivacyView = () => {
       <div className="grid grid-cols-2 gap-3">
         <button
           onClick={() => setCurrentView('care')}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left space-y-1"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left space-y-1 cursor-pointer"
         >
-          <div className="text-xs text-slate-400 font-medium">Consultations</div>
+          <div className="text-xs text-slate-600 dark:text-slate-300 font-bold">Consultations</div>
           <div className="text-lg font-bold text-slate-900 dark:text-slate-100">{bookings.length} Booked</div>
         </button>
 
         <button
           onClick={() => setCurrentView('store')}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left space-y-1"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left space-y-1 cursor-pointer"
         >
-          <div className="text-xs text-slate-400 font-medium">Store Orders</div>
+          <div className="text-xs text-slate-600 dark:text-slate-300 font-bold">Store Orders</div>
           <div className="text-lg font-bold text-slate-900 dark:text-slate-100">{orders.length} Placed</div>
         </button>
       </div>
@@ -259,7 +259,7 @@ export const ProfilePrivacyView = () => {
       {/* NOTIFICATIONS & SMART HEALTH ALERTS LINK */}
       <button
         onClick={() => setCurrentView('notifications')}
-        className="w-full p-4 rounded-3xl border shadow-sm flex items-center justify-between transition-colors text-left bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-pink-300 dark:hover:border-pink-900"
+        className="w-full p-4 rounded-3xl border shadow-sm flex items-center justify-between transition-colors text-left bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-pink-300 dark:hover:border-pink-900 cursor-pointer"
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-pink-100 dark:bg-pink-950 text-pink-600 flex items-center justify-center shrink-0">
@@ -269,7 +269,7 @@ export const ProfilePrivacyView = () => {
             <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
               Notifications & Smart Health Alerts
             </div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+            <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
               Pattern status, lock screen privacy mode & reminders
             </div>
           </div>
@@ -281,10 +281,10 @@ export const ProfilePrivacyView = () => {
       <div className="space-y-3">
         <button
           onClick={handleExportData}
-          className="w-full py-3 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-between"
+          className="w-full py-3 px-4 rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold flex items-center justify-between cursor-pointer"
         >
           <span>Export Personal Health Data (JSON)</span>
-          <Download className="w-4 h-4 text-slate-500" />
+          <Download className="w-4 h-4 text-slate-600 dark:text-slate-300" />
         </button>
 
         <button

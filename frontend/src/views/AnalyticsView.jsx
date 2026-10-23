@@ -93,43 +93,66 @@ export const AnalyticsView = () => {
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-pink-500" />
-              <span>Cycle Length History (Past 4 Months)</span>
+              <span>Cycle Length History ({cycles.length} Recorded Cycles)</span>
             </h3>
 
-            <div className="space-y-3 pt-2">
-              {[
-                { month: 'September 2026', length: 28, periodDays: 5, color: 'bg-pink-600' },
-                { month: 'August 2026', length: 28, periodDays: 5, color: 'bg-rose-600' },
-                { month: 'July 2026', length: 28, periodDays: 5, color: 'bg-purple-600' },
-                { month: 'June 2026', length: 28, periodDays: 5, color: 'bg-teal-600' },
-              ].map((item, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
-                    <span>{item.month}</span>
-                    <span className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>{item.length} days ({item.periodDays} flow days)</span>
+            {cycles.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+                <div className="text-2xl">🌸</div>
+                <div className="font-bold text-xs text-slate-800 dark:text-slate-200">No cycle records yet</div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                  When you record your period dates, your cycle length history and average durations will compute automatically.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-3 pt-2">
+                  {cycles.map((cyc, idx) => {
+                    const colors = ['bg-pink-600', 'bg-rose-600', 'bg-purple-600', 'bg-teal-600', 'bg-amber-500'];
+                    const color = colors[idx % colors.length];
+                    const cycleLen = cyc.length || 28;
+                    const periodDays = cyc.periodDuration || (cyc.flowLogs ? cyc.flowLogs.length : 5);
+                    return (
+                      <div key={cyc.id || idx} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                          <span>{cyc.startDate} {cyc.status === 'current' ? '(Current)' : ''}</span>
+                          <span className={privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}>
+                            {cycleLen} days ({periodDays} flow days)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
+                          <div
+                            className={`${color} h-full rounded-full transition-all duration-500`}
+                            style={{ width: `${Math.min((cycleLen / 45) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="p-3.5 rounded-2xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900 text-center space-y-0.5">
+                    <div className="text-[11px] font-extrabold uppercase text-pink-700 dark:text-pink-300">Average Cycle</div>
+                    <div className={`text-2xl font-black text-pink-950 dark:text-pink-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>
+                      {Math.round(cycles.reduce((acc, c) => acc + (c.length || 28), 0) / cycles.length)} Days
+                    </div>
+                    <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                      Based on {cycles.length} user cycles
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden p-0.5">
-                    <div
-                      className={`${item.color} h-full rounded-full transition-all duration-500`}
-                      style={{ width: `${(item.length / 35) * 100}%` }}
-                    />
+                  <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900 text-center space-y-0.5">
+                    <div className="text-[11px] font-extrabold uppercase text-teal-700 dark:text-teal-300">Avg Period Duration</div>
+                    <div className={`text-2xl font-black text-teal-950 dark:text-teal-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>
+                      {Math.round(cycles.reduce((acc, c) => acc + (c.periodDuration || 5), 0) / cycles.length)} Days
+                    </div>
+                    <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                      User Flow Average
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3.5 rounded-2xl bg-pink-50 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-900 text-center space-y-0.5">
-                <div className="text-[11px] font-extrabold uppercase text-pink-700 dark:text-pink-300">Average Cycle</div>
-                <div className={`text-2xl font-black text-pink-950 dark:text-pink-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>28 Days</div>
-                <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Variation: ±0.5 days</div>
-              </div>
-              <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900 text-center space-y-0.5">
-                <div className="text-[11px] font-extrabold uppercase text-teal-700 dark:text-teal-300">Avg Period Duration</div>
-                <div className={`text-2xl font-black text-teal-950 dark:text-teal-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>5 Days</div>
-                <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Regular Flow</div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -139,27 +162,46 @@ export const AnalyticsView = () => {
         <div className="space-y-4 animate-fade-in">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-              Most Frequently Logged Symptoms
+              Most Frequently Logged Symptoms ({symptomLogs.length} Total Logs)
             </h3>
 
-            <div className="space-y-3">
-              {[
-                { name: 'Abdominal Cramps', count: 8, phase: 'Menstrual Phase (Days 1-3)', percent: 80, color: 'bg-rose-600' },
-                { name: 'Bloating', count: 5, phase: 'Luteal Phase (Days 22-26)', percent: 50, color: 'bg-purple-600' },
-                { name: 'Fatigue & Low Energy', count: 4, phase: 'Luteal / Menstrual', percent: 40, color: 'bg-amber-600' },
-                { name: 'Headache', count: 2, phase: 'Day 1 of Cycle', percent: 20, color: 'bg-sky-600' }
-              ].map((sym, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-xs font-bold text-slate-900 dark:text-slate-100">
-                    <span>{sym.name}</span>
-                    <span className="text-slate-700 dark:text-slate-300">{sym.count} entries ({sym.phase})</span>
-                  </div>
-                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                    <div className={`${sym.color} h-full rounded-full`} style={{ width: `${sym.percent}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+            {symptomLogs.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+                <div className="text-2xl">🩺</div>
+                <div className="font-bold text-xs text-slate-800 dark:text-slate-200">No symptoms logged yet</div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                  Record daily symptoms to track occurrences, severity patterns, and phase correlations.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(() => {
+                  const counts = {};
+                  symptomLogs.forEach(s => {
+                    counts[s.symptomName] = (counts[s.symptomName] || 0) + 1;
+                  });
+                  const colors = ['bg-rose-600', 'bg-purple-600', 'bg-amber-600', 'bg-sky-600', 'bg-teal-600'];
+                  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+                  const maxCount = sorted[0][1];
+
+                  return sorted.map(([name, count], idx) => {
+                    const color = colors[idx % colors.length];
+                    const percent = Math.round((count / maxCount) * 100);
+                    return (
+                      <div key={name} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-slate-900 dark:text-slate-100">
+                          <span>{name}</span>
+                          <span className="text-slate-700 dark:text-slate-300">{count} {count === 1 ? 'entry' : 'entries'}</span>
+                        </div>
+                        <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                          <div className={`${color} h-full rounded-full transition-all duration-500`} style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -169,21 +211,39 @@ export const AnalyticsView = () => {
         <div className="space-y-4 animate-fade-in">
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
-              Mood Trends Across Cycle Phases
+              Mood Trends ({moodLogs.length} Recorded Entries)
             </h3>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900">
-                <div className="text-2xl mb-1">🙂 Good</div>
-                <div className="font-extrabold text-slate-900 dark:text-slate-100">Follicular Phase</div>
-                <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium mt-0.5">Highest energy & positive mood logged during Days 6-13.</div>
+            {moodLogs.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+                <div className="text-2xl">😊</div>
+                <div className="font-bold text-xs text-slate-800 dark:text-slate-200">No mood records yet</div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                  Log how you're feeling daily to observe emotional patterns across your menstrual phases.
+                </p>
               </div>
-              <div className="p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900">
-                <div className="text-2xl mb-1">😐 Calm / Okay</div>
-                <div className="font-extrabold text-slate-900 dark:text-slate-100">Luteal Phase</div>
-                <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium mt-0.5">Desire for rest and quiet activities logged during Days 20-27.</div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                {(() => {
+                  const counts = {};
+                  const emojiMap = {};
+                  moodLogs.forEach(m => {
+                    const label = m.label || m.moodId;
+                    counts[label] = (counts[label] || 0) + 1;
+                    if (m.emoji) emojiMap[label] = m.emoji;
+                  });
+                  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([label, count]) => (
+                    <div key={label} className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900">
+                      <div className="text-2xl mb-1">{emojiMap[label] || '🙂'} {label}</div>
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100">{count} {count === 1 ? 'day recorded' : 'days recorded'}</div>
+                      <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium mt-0.5">
+                        {Math.round((count / moodLogs.length) * 100)}% of total mood entries
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -194,23 +254,32 @@ export const AnalyticsView = () => {
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Moon className="w-4 h-4 text-sky-500" />
-              <span>Weekly Sleep Duration & Quality</span>
+              <span>Recorded Sleep Entries ({sleepLogs.length})</span>
             </h3>
 
-            <div className="space-y-2.5">
-              {[
-                { day: 'Wed (Today)', hours: '7h 20m', quality: 'Good' },
-                { day: 'Tue', hours: '6h 45m', quality: 'Fair' },
-                { day: 'Mon', hours: '8h 00m', quality: 'Excellent' },
-                { day: 'Sun', hours: '7h 45m', quality: 'Good' }
-              ].map((s, idx) => (
-                <div key={idx} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 font-semibold">
-                  <span className="font-bold w-24 text-slate-900 dark:text-slate-100">{s.day}</span>
-                  <span className={`font-bold text-slate-900 dark:text-slate-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>{s.hours}</span>
-                  <span className="text-sky-700 dark:text-sky-300 font-extrabold">{s.quality}</span>
-                </div>
-              ))}
-            </div>
+            {sleepLogs.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 space-y-2">
+                <div className="text-2xl">😴</div>
+                <div className="font-bold text-xs text-slate-800 dark:text-slate-200">No sleep records yet</div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto">
+                  Log your sleep hours and quality to view duration trends and rest correlations.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {sleepLogs.slice(0, 7).map((s, idx) => (
+                  <div key={s.id || idx} className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 font-semibold">
+                    <span className="font-bold w-28 text-slate-900 dark:text-slate-100">{s.date}</span>
+                    <span className={`font-bold text-slate-900 dark:text-slate-100 ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>
+                      {s.hours}h {s.minutes || 0}m
+                    </span>
+                    <span className="text-sky-700 dark:text-sky-300 font-extrabold">
+                      {s.qualityEmoji || '😴'} {s.quality}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -227,22 +296,26 @@ export const AnalyticsView = () => {
                 <span>Cycle Estimation Engine</span>
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/20 backdrop-blur-md">
-                {predictionInsights?.isSufficientData ? 'Established Pattern ✓' : 'Preliminary Estimate ℹ️'}
+                {predictionInsights?.isSufficientData ? 'Established Pattern (±2d) ✓' : 'Calibration Mode ℹ️'}
               </span>
             </div>
 
             <div className="space-y-1">
               <div className="text-xs text-pink-100 font-semibold">
-                Based on your recorded cycle history and symptom entries:
+                {predictionInsights?.isSufficientData
+                  ? 'Based on your recorded cycle history and symptom entries:'
+                  : 'Requires at least 2 full recorded cycles to compute genuine predictions:'}
               </div>
               <div className={`text-2xl sm:text-3xl font-black ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`}>
-                Next period estimated around {predictionInsights?.nextPeriodEstimatedDate || 'October 15, 2026'}
+                {predictionInsights?.nextPeriodEstimatedDate
+                  ? `Next period estimated around ${predictionInsights.nextPeriodEstimatedDate}`
+                  : 'Awaiting sufficient cycle history'}
               </div>
             </div>
 
             <div className="text-xs text-pink-100/90 font-medium pt-2 border-t border-white/20">
               <strong>Basis of estimation: </strong>
-              {predictionInsights?.confidenceNote || 'Estimated from your recorded cycle history and profile baseline (28 days).'}
+              {predictionInsights?.confidenceNote || 'Estimated strictly from your personal database records. No fabricated health statistics are presented.'}
             </div>
           </div>
 
@@ -268,7 +341,7 @@ export const AnalyticsView = () => {
                 <Calendar className="w-4 h-4 text-rose-500" />
                 <span>Recurring Symptoms Across Recorded Cycles</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                 Symptoms frequently recorded during specific phases of your cycle
               </p>
             </div>
@@ -321,10 +394,10 @@ export const AnalyticsView = () => {
                     </span>
                     <span className="text-[11px] text-pink-600 dark:text-pink-400 font-extrabold">{item.phase}</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+                  <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">
                     "{item.note}"
                   </p>
-                  <div className="text-[10px] text-slate-400">
+                  <div className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
                     Logged in {item.count} recorded cycle observations
                   </div>
                 </div>
@@ -342,7 +415,7 @@ export const AnalyticsView = () => {
               <div className="font-bold flex items-center gap-1.5">
                 <span>⚡ Menstrual Migraine Correlation Observation</span>
               </div>
-              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+              <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
                 You have recorded severe headaches or migraines predominantly within 1–2 days of your menstrual flow transition. Lifestyle logs indicate poor sleep (under 6.5 hours) frequently co-occurs with these episodes.
               </p>
               {predictionInsights?.migraineCyclePatterns && predictionInsights.migraineCyclePatterns.length > 0 && (
@@ -360,7 +433,7 @@ export const AnalyticsView = () => {
           </div>
 
           {/* Educational Disclaimer */}
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 font-medium flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
             <span>
               {t('analytics.disclaimerText', 'Predictions and summaries are algorithmic estimates based on your user-entered history. They are not medical diagnoses, guarantees, or clinical advice.')}
@@ -382,9 +455,9 @@ export const AnalyticsView = () => {
                   <HeartPulse className="w-4 h-4 text-pink-600" />
                   <span>{t('analytics.pcodSummaryTitle', 'PCOD / PCOS Cycle Regularity Overview')}</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Based on your recorded cycle lengths and reported symptoms</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">Based on your recorded cycle lengths and reported symptoms</p>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-pink-50 text-pink-700 dark:bg-pink-950 dark:text-pink-300 border border-pink-200">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-pink-50 text-pink-800 dark:bg-pink-950 dark:text-pink-200 border border-pink-200 dark:border-pink-800">
                 {conditionsSummary?.pcod?.regularityStatus || 'Consistent (±0.5d)'}
               </span>
             </div>
@@ -412,7 +485,7 @@ export const AnalyticsView = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-[11px] text-slate-600 dark:text-slate-300 font-medium">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 font-medium">
               <strong>Observation: </strong>
               Your cycle duration has remained within 28 ± 1 days over the past 4 recorded cycles. Common PCOD indicators like skin breakouts and fatigue peak predominantly during the late luteal window.
             </div>
@@ -425,7 +498,7 @@ export const AnalyticsView = () => {
                 <Zap className="w-4 h-4 text-purple-600" />
                 <span>{t('analytics.migrainePatternTitle', 'User-Reported Migraine Patterns & Triggers')}</span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">Recurring triggers and associated sensitivity observations</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-medium mt-0.5">Recurring triggers and associated sensitivity observations</p>
             </div>
 
             <div className="space-y-3">
@@ -446,7 +519,7 @@ export const AnalyticsView = () => {
                 <div key={idx} className="space-y-1">
                   <div className="flex justify-between text-xs font-bold text-slate-900 dark:text-slate-100">
                     <span>{trig.trigger}</span>
-                    <span className="text-slate-500">{trig.count} episodes ({trig.percent}%)</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-semibold">{trig.count} episodes ({trig.percent}%)</span>
                   </div>
                   <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
                     <div className={`${trig.color} h-full rounded-full`} style={{ width: `${trig.percent}%` }} />
@@ -458,7 +531,7 @@ export const AnalyticsView = () => {
             <div className="grid grid-cols-2 gap-3 text-xs pt-1">
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-0.5">
                 <div className="font-extrabold text-slate-900 dark:text-slate-100">Light Sensitivity</div>
-                <div className="text-slate-500 text-[11px]">
+                <div className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">
                   {migraineLogs.length > 0
                     ? `Reported in ${Math.round((migraineLogs.filter(m => m.sensitivityLight).length / migraineLogs.length) * 100)}% of episodes.`
                     : 'Reported in 80% of severe headache episodes.'}
@@ -466,7 +539,7 @@ export const AnalyticsView = () => {
               </div>
               <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-0.5">
                 <div className="font-extrabold text-slate-900 dark:text-slate-100">Avg Duration</div>
-                <div className="text-slate-500 text-[11px]">
+                <div className="text-slate-700 dark:text-slate-300 font-medium text-[11px]">
                   {conditionsSummary?.migraine?.averageDurationHours
                     ? `${conditionsSummary.migraine.averageDurationHours} hours recorded per episode.`
                     : '3.2 hours per episode when relief applied.'}
@@ -475,7 +548,7 @@ export const AnalyticsView = () => {
             </div>
 
             {/* Non-Diagnostic Disclaimer */}
-            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-700 dark:text-slate-300 font-medium flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
               <span>
                 {t('conditions.nonDiagnosticNotice', 'Tracking conditions helps monitor personal lifestyle patterns and does not replace medical diagnosis.')}

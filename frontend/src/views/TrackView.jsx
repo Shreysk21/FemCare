@@ -772,7 +772,7 @@ export const TrackView = () => {
         </div>
 
         {totalTodayLogsCount === 0 ? (
-          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-dashed border-slate-200 dark:border-slate-700 text-center text-xs text-slate-500 dark:text-slate-400">
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs text-slate-700 dark:text-slate-300 font-medium">
             {t('track.noLogsToday', "No entries recorded yet today. Tap any quick button above to record how you're feeling!")}
           </div>
         ) : (
@@ -781,29 +781,29 @@ export const TrackView = () => {
             {!showTodayDetails && (
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
                 {todayPeriodFlow && (
-                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200">
+                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-rose-50 text-rose-800 dark:bg-rose-950/70 dark:text-rose-200 border border-rose-300 dark:border-rose-800">
                     🩸 {todayPeriodFlow} Flow
                   </span>
                 )}
                 {todayMood && (
-                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200">
+                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 dark:bg-amber-950/70 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
                     {todayMood.emoji} {todayMood.label}
                   </span>
                 )}
                 {hydration.currentMl > 0 && (
-                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200">
+                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-teal-50 text-teal-800 dark:bg-teal-950/70 dark:text-teal-200 border border-teal-300 dark:border-teal-800">
                     💧 {hydration.currentMl} ml
                   </span>
                 )}
                 {todaySleep && (
-                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200">
+                  <span className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-800">
                     😴 {todaySleep.hours}h ({todaySleep.quality})
                   </span>
                 )}
                 {todaySymptoms.slice(0, 2).map(sym => (
                   <span
                     key={sym.id}
-                    className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200"
+                    className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-purple-50 text-purple-800 dark:bg-purple-950/70 dark:text-purple-200 border border-purple-300 dark:border-purple-800"
                   >
                     🩺 <span className={privacyShield ? 'blur-xs select-none' : ''}>{sym.symptomName}</span> ({sym.severity})
                   </span>
@@ -811,7 +811,7 @@ export const TrackView = () => {
                 {todaySymptoms.length > 2 && (
                   <button
                     onClick={() => setShowTodayDetails(true)}
-                    className="shrink-0 px-2 py-1 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
+                    className="shrink-0 px-2 py-1 rounded-full text-[11px] font-extrabold bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 border border-slate-300 dark:border-slate-600 cursor-pointer"
                   >
                     +{todaySymptoms.length - 2} more
                   </button>
@@ -821,21 +821,21 @@ export const TrackView = () => {
 
             {/* EXPANDED VIEW: Complete Itemized List with Direct Edit & Delete */}
             {showTodayDetails && (
-              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+              <div className="space-y-2 pt-1 border-t border-slate-200 dark:border-slate-800 animate-fade-in">
                 
                 {/* Period Entry */}
                 {todayPeriodFlow && (
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs">
                     <div>
-                      <div className="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         <span>🩸 Menstrual Flow:</span>
-                        <span className="text-rose-600 dark:text-rose-400 font-bold">{todayPeriodFlow}</span>
+                        <span className="text-rose-700 dark:text-rose-300 font-black">{todayPeriodFlow}</span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Recorded for {todayStr}</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">Recorded for {todayStr}</div>
                     </div>
                     <button
                       onClick={() => setPeriodModalOpen(true)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                       title="Edit Period Flow"
                       aria-label="Edit Period Flow"
                     >
@@ -846,19 +846,19 @@ export const TrackView = () => {
 
                 {/* Mood Entry */}
                 {todayMood && (
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs">
                     <div>
-                      <div className="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         <span>{todayMood.emoji} Mood:</span>
-                        <span className="text-amber-600 dark:text-amber-400 font-bold">{todayMood.label}</span>
+                        <span className="text-amber-700 dark:text-amber-300 font-black">{todayMood.label}</span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                         {todayMood.time || 'Today'} {todayMood.note && `• "${todayMood.note}"`}
                       </div>
                     </div>
                     <button
                       onClick={() => setMoodModalOpen(true)}
-                      className="p-1.5 text-slate-400 hover:text-amber-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors cursor-pointer"
                       title="Edit Mood"
                       aria-label="Edit Mood"
                     >
@@ -869,17 +869,17 @@ export const TrackView = () => {
 
                 {/* Sleep Entry */}
                 {todaySleep && (
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs">
                     <div>
-                      <div className="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         <span>😴 Sleep:</span>
-                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{todaySleep.hours}h ({todaySleep.quality})</span>
+                        <span className="text-indigo-700 dark:text-indigo-300 font-black">{todaySleep.hours}h ({todaySleep.quality})</span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Logged for {todaySleep.date}</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">Logged for {todaySleep.date}</div>
                     </div>
                     <button
                       onClick={() => setSleepModalOpen(true)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
                       title="Edit Sleep"
                       aria-label="Edit Sleep"
                     >
@@ -892,16 +892,16 @@ export const TrackView = () => {
                 {todaySymptoms.map(sym => (
                   <div
                     key={sym.id}
-                    className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs"
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs"
                   >
                     <div>
-                      <div className="font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                         <span className={privacyShield ? 'blur-xs select-none' : ''}>{sym.symptomName}</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/80 dark:text-purple-200 border border-purple-200 dark:border-purple-700">
                           {sym.severity}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">
                         {sym.timeLogged || 'Today'} {sym.notes && `• "${sym.notes}"`}
                       </div>
                     </div>
@@ -917,7 +917,7 @@ export const TrackView = () => {
                           });
                           setEditItemModalOpen(true);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors cursor-pointer"
                         title="Edit symptom"
                         aria-label="Edit symptom"
                       >
@@ -925,7 +925,7 @@ export const TrackView = () => {
                       </button>
                       <button
                         onClick={() => deleteSymptom(sym.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                         title="Delete symptom"
                         aria-label="Delete symptom"
                       >
@@ -937,19 +937,19 @@ export const TrackView = () => {
 
                 {/* Condition Entries (if any recorded today) */}
                 {todayPcod && (
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs">
                     <div>
                       <div className="font-extrabold text-pink-900 dark:text-pink-100 flex items-center gap-1.5">
                         <span>🌸 PCOD Observation:</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-100 text-pink-800 dark:bg-pink-900/80 dark:text-pink-200 border border-pink-200 dark:border-pink-700">
                           {todayPcod.severity}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{todayPcod.flowPattern} flow {todayPcod.notes && `• "${todayPcod.notes}"`}</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">{todayPcod.flowPattern} flow {todayPcod.notes && `• "${todayPcod.notes}"`}</div>
                     </div>
                     <button
                       onClick={() => deletePcodLog(todayPcod.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                       title="Delete PCOD log"
                       aria-label="Delete PCOD log"
                     >
@@ -959,19 +959,19 @@ export const TrackView = () => {
                 )}
 
                 {todayMigraine && (
-                  <div className="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-xs">
+                  <div className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between text-xs">
                     <div>
                       <div className="font-extrabold text-purple-900 dark:text-purple-100 flex items-center gap-1.5">
                         <span>⚡ Migraine Episode:</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/80 dark:text-purple-200 border border-purple-200 dark:border-purple-700">
                           {todayMigraine.severity}
                         </span>
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{todayMigraine.durationHours} hours duration</div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-0.5">{todayMigraine.durationHours} hours duration</div>
                     </div>
                     <button
                       onClick={() => deleteMigraineLog(todayMigraine.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                       title="Delete Migraine log"
                       aria-label="Delete Migraine log"
                     >
@@ -1833,66 +1833,88 @@ export const TrackView = () => {
         title={t('track.doctorPrepTitle', 'Prepare for Doctor Visit')}
         maxWidth="max-w-lg"
       >
-        <div className="space-y-4 text-xs">
+        <div className="space-y-4 text-xs text-slate-900 dark:text-slate-100">
           
           {/* Privacy Guarantee Note */}
-          <div className="p-3 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-900 flex items-start gap-2 text-teal-900 dark:text-teal-200 text-[11px]">
-            <ShieldCheck className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/70 border border-teal-300 dark:border-teal-700/80 flex items-start gap-2.5 text-teal-950 dark:text-teal-100 text-[11px] font-medium leading-relaxed">
+            <ShieldCheck className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
             <p>
-              <strong>You have complete control:</strong> Select only the records you wish to discuss with your doctor. Data is formatted locally and is never shared without your permission.
+              <strong className="text-teal-950 dark:text-teal-50 font-extrabold">You have complete control:</strong> Select only the records you wish to discuss with your doctor. Data is formatted locally and is never shared without your permission.
             </p>
           </div>
 
           {/* Step 1: Data Selection Checkboxes */}
           <div className="space-y-1.5">
-            <div className="font-extrabold uppercase text-slate-500 text-[10px]">Step 1: Choose What to Include</div>
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-              <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+            <div className="font-extrabold uppercase text-slate-700 dark:text-slate-200 text-[11px] tracking-wider">
+              Step 1: Choose What to Include
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                docIncludeCycles 
+                  ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-950 dark:text-teal-100 font-bold shadow-2xs' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300 font-semibold'
+              }`}>
                 <input
                   type="checkbox"
                   checked={docIncludeCycles}
                   onChange={(e) => setDocIncludeCycles(e.target.checked)}
-                  className="rounded text-pink-600"
+                  className="rounded text-teal-600 focus:ring-teal-500 accent-teal-600 w-4 h-4 cursor-pointer"
                 />
                 <span>Cycle & Flow History</span>
               </label>
 
-              <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                docIncludeSymptoms 
+                  ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-950 dark:text-teal-100 font-bold shadow-2xs' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300 font-semibold'
+              }`}>
                 <input
                   type="checkbox"
                   checked={docIncludeSymptoms}
                   onChange={(e) => setDocIncludeSymptoms(e.target.checked)}
-                  className="rounded text-pink-600"
+                  className="rounded text-teal-600 focus:ring-teal-500 accent-teal-600 w-4 h-4 cursor-pointer"
                 />
                 <span>Frequent Symptoms & Pain</span>
               </label>
 
-              <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                docIncludeMeds 
+                  ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-950 dark:text-teal-100 font-bold shadow-2xs' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300 font-semibold'
+              }`}>
                 <input
                   type="checkbox"
                   checked={docIncludeMeds}
                   onChange={(e) => setDocIncludeMeds(e.target.checked)}
-                  className="rounded text-pink-600"
+                  className="rounded text-teal-600 focus:ring-teal-500 accent-teal-600 w-4 h-4 cursor-pointer"
                 />
                 <span>Medications & Supplements</span>
               </label>
 
-              <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer">
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer ${
+                docIncludeConditions 
+                  ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-950 dark:text-teal-100 font-bold shadow-2xs' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300 font-semibold'
+              }`}>
                 <input
                   type="checkbox"
                   checked={docIncludeConditions}
                   onChange={(e) => setDocIncludeConditions(e.target.checked)}
-                  className="rounded text-pink-600"
+                  className="rounded text-teal-600 focus:ring-teal-500 accent-teal-600 w-4 h-4 cursor-pointer"
                 />
                 <span>PCOD / Migraine Logs</span>
               </label>
 
-              <label className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer col-span-2">
+              <label className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer col-span-2 ${
+                docIncludeLifestyle 
+                  ? 'bg-teal-50 dark:bg-teal-950/70 border-teal-500 text-teal-950 dark:text-teal-100 font-bold shadow-2xs' 
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:border-slate-300 font-semibold'
+              }`}>
                 <input
                   type="checkbox"
                   checked={docIncludeLifestyle}
                   onChange={(e) => setDocIncludeLifestyle(e.target.checked)}
-                  className="rounded text-pink-600"
+                  className="rounded text-teal-600 focus:ring-teal-500 accent-teal-600 w-4 h-4 cursor-pointer"
                 />
                 <span>Lifestyle Baseline (Sleep & Hydration average)</span>
               </label>
@@ -1901,29 +1923,31 @@ export const TrackView = () => {
 
           {/* Step 2: Questions for Clinician */}
           <div className="space-y-1.5">
-            <div className="font-extrabold uppercase text-slate-500 text-[10px]">Step 2: Questions to Ask My Doctor</div>
-            <div className="space-y-1">
+            <div className="font-extrabold uppercase text-slate-700 dark:text-slate-200 text-[11px] tracking-wider">
+              Step 2: Questions to Ask My Doctor
+            </div>
+            <div className="space-y-1.5">
               {docQuestions.map((q, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-[11px]">
+                <div key={idx} className="flex items-center justify-between gap-2.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-900 dark:text-slate-100 font-semibold shadow-2xs">
                   <span className="truncate">{idx + 1}. {q}</span>
                   <button
                     onClick={() => setDocQuestions(prev => prev.filter((_, i) => i !== idx))}
-                    className="text-slate-400 hover:text-rose-600 shrink-0 cursor-pointer"
+                    className="text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shrink-0 cursor-pointer"
                     aria-label="Remove question"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-1.5 pt-1">
+            <div className="flex gap-2 pt-1">
               <input
                 type="text"
                 value={newDocQuestion}
                 onChange={(e) => setNewDocQuestion(e.target.value)}
                 placeholder="Add custom question for your doctor..."
-                className="flex-1 p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px]"
+                className="flex-1 p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 text-xs font-medium focus:ring-2 focus:ring-teal-500 outline-none"
               />
               <button
                 type="button"
@@ -1933,7 +1957,7 @@ export const TrackView = () => {
                     setNewDocQuestion('');
                   }
                 }}
-                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs cursor-pointer"
+                className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold rounded-xl text-xs shadow-xs transition-colors cursor-pointer"
               >
                 Add
               </button>
@@ -1942,15 +1966,17 @@ export const TrackView = () => {
 
           {/* Step 3: Editable Reviewable Document */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-500">
+            <div className="flex items-center justify-between text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-200 tracking-wider">
               <span>Step 3: Review & Edit Summary</span>
-              <span className="text-pink-600 dark:text-pink-400 font-bold">Editable text</span>
+              <span className="text-teal-700 dark:text-teal-300 font-bold bg-teal-50 dark:bg-teal-950/80 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
+                Editable preview
+              </span>
             </div>
             <textarea
               rows={8}
               value={editedDocSummary}
               onChange={(e) => setEditedDocSummary(e.target.value)}
-              className="w-full p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono text-[10px] leading-relaxed select-text"
+              className="w-full p-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-mono text-[11px] leading-relaxed select-text focus:ring-2 focus:ring-teal-500 outline-none"
             />
           </div>
 
@@ -1958,23 +1984,23 @@ export const TrackView = () => {
           <div className="grid grid-cols-3 gap-2 pt-1">
             <button
               onClick={copyToClipboard}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-extrabold flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
+              className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-extrabold flex items-center justify-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs shadow-2xs transition-colors"
             >
-              <Copy className="w-3.5 h-3.5 text-pink-600" />
+              <Copy className="w-3.5 h-3.5 text-pink-600 dark:text-pink-400" />
               <span>Copy</span>
             </button>
 
             <button
               onClick={downloadTextReport}
-              className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-extrabold flex items-center justify-center gap-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs"
+              className="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-extrabold flex items-center justify-center gap-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer text-xs shadow-2xs transition-colors"
             >
-              <Download className="w-3.5 h-3.5 text-teal-600" />
+              <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
               <span>Download</span>
             </button>
 
             <button
               onClick={() => window.print()}
-              className="p-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer text-xs"
+              className="p-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer text-xs transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / PDF</span>
@@ -1984,7 +2010,7 @@ export const TrackView = () => {
           <div className="text-center pt-1">
             <button
               onClick={downloadJsonSummary}
-              className="text-[11px] font-bold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 underline cursor-pointer"
+              className="text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 underline cursor-pointer transition-colors"
             >
               Export Structured JSON Data (For EMR / Health App Import)
             </button>
@@ -2017,27 +2043,27 @@ export const TrackView = () => {
             className="space-y-3.5 text-xs"
           >
             <div>
-              <label className="block font-bold mb-1">Item</label>
+              <label className="block font-bold mb-1 text-slate-900 dark:text-slate-100">Item</label>
               <input
                 type="text"
                 disabled
                 value={editingItem.name || ''}
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold"
+                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold"
               />
             </div>
 
             <div>
-              <label className="block font-bold mb-1">Severity</label>
+              <label className="block font-bold mb-1 text-slate-900 dark:text-slate-100">Severity</label>
               <div className="grid grid-cols-3 gap-2">
                 {['Mild', 'Moderate', 'Severe'].map(sev => (
                   <button
                     key={sev}
                     type="button"
                     onClick={() => setEditingItem({ ...editingItem, severity: sev })}
-                    className={`py-2 rounded-xl border font-bold cursor-pointer ${
+                    className={`py-2 rounded-xl border font-bold cursor-pointer transition-colors ${
                       editingItem.severity === sev
                         ? 'bg-pink-600 text-white border-pink-600'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                        : 'border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700'
                     }`}
                   >
                     {sev}
@@ -2047,12 +2073,12 @@ export const TrackView = () => {
             </div>
 
             <div>
-              <label className="block font-bold mb-1">Notes</label>
+              <label className="block font-bold mb-1 text-slate-900 dark:text-slate-100">Notes</label>
               <input
                 type="text"
                 value={editingItem.notes || ''}
                 onChange={(e) => setEditingItem({ ...editingItem, notes: e.target.value })}
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800"
+                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
             </div>
 

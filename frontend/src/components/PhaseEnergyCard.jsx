@@ -12,7 +12,7 @@ export const PhaseEnergyCard = () => {
         title: "Menstrual Phase: Rest & Restore 🩸",
         subtitle: "Estrogen & progesterone levels are low. Prioritize soothing care.",
         badge: "Low Energy Phase",
-        badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-950 dark:text-rose-200 dark:border-rose-800",
+        badgeBg: "bg-rose-100 text-rose-950 dark:bg-rose-950 dark:text-rose-100 border border-rose-300 dark:border-rose-700 font-extrabold",
         tips: [
           {
             icon: "🧘‍♀️",
@@ -30,7 +30,7 @@ export const PhaseEnergyCard = () => {
         title: "Follicular & Ovulatory Phase: Natural Energy Peak 🌱",
         subtitle: "Rising estrogen boosts metabolism, stamina, and mental sharpness.",
         badge: "High Vitality Peak",
-        badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700",
+        badgeBg: "bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-100 border border-amber-300 dark:border-amber-700 font-extrabold",
         tips: [
           {
             icon: "🏋️‍♀️",
@@ -54,11 +54,11 @@ export const PhaseEnergyCard = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
-          <h3 className="font-bold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="font-extrabold text-sm tracking-tight" style={{ color: 'var(--text-primary)' }}>
             {phaseDetails.title}
           </h3>
         </div>
-        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${phaseDetails.badgeBg}`}>
+        <span className={`text-[10px] px-2.5 py-0.5 rounded-full ${phaseDetails.badgeBg}`}>
           {phaseDetails.badge}
         </span>
       </div>
@@ -75,11 +75,11 @@ export const PhaseEnergyCard = () => {
             className="p-3.5 rounded-2xl border space-y-1.5 transition-colors"
             style={{ backgroundColor: 'var(--bg-subcard)', borderColor: 'var(--border-card)' }}
           >
-            <div className="flex items-center gap-1.5 font-semibold text-xs" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex items-center gap-1.5 font-bold text-xs" style={{ color: 'var(--text-primary)' }}>
               <span className="text-base">{tip.icon}</span>
               <span>{tip.category}</span>
             </div>
-            <p className={`font-normal leading-relaxed text-xs sm:text-sm ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`} style={{ color: 'var(--text-secondary)' }}>
+            <p className={`font-medium leading-relaxed text-xs sm:text-sm ${privacyShield ? 'filter blur-xs hover:blur-none transition-all' : ''}`} style={{ color: 'var(--text-secondary)' }}>
               {tip.text}
             </p>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Modal } from './Modal';
-import { HeartHandshake, Shield, Check, Copy, UserPlus, Key, Mail, Sparkles } from 'lucide-react';
+import { HeartHandshake, Shield, Check, Copy, UserPlus, Key, Mail, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
 
 export const CircleCareInviteModal = () => {
   const {
@@ -15,6 +15,8 @@ export const CircleCareInviteModal = () => {
   const [memberEmail, setMemberEmail] = useState('');
   const [selectedRole, setSelectedRole] = useState('Partner');
   const [syncCode, setSyncCode] = useState('FEM-8492');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // Granular Privacy Permissions
   const [permissions, setPermissions] = useState({
@@ -37,11 +39,29 @@ export const CircleCareInviteModal = () => {
     showToast(`Sync Code ${syncCode} copied to clipboard! 📋`);
   };
 
-  const handleSaveInvite = () => {
-    addCircleMember(memberName || `${selectedRole} Member`, selectedRole, memberEmail, permissions);
-    setMemberName('');
-    setMemberEmail('');
-    setCircleInviteModalOpen(false);
+  const handleSaveInvite = async () => {
+    if (!memberEmail.trim()) {
+      setErrorMessage("Please enter your partner's registered FemCare account email address.");
+      return;
+    }
+    setErrorMessage(null);
+    setIsSubmitting(true);
+    try {
+      await addCircleMember(
+        memberName.trim() || `${selectedRole} Member`,
+        selectedRole,
+        memberEmail.trim().toLowerCase(),
+        permissions
+      );
+      setMemberName('');
+      setMemberEmail('');
+      setErrorMessage(null);
+      setCircleInviteModalOpen(false);
+    } catch (err) {
+      setErrorMessage(err.message || "Failed to send sharing request. Please verify the recipient's registered email.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -201,13 +221,34 @@ export const CircleCareInviteModal = () => {
           </div>
         </div>
 
+        {/* Error Alert Notice if recipient is not registered */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-start gap-2.5 animate-fade-in">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div>
+              <div className="font-extrabold text-rose-900 dark:text-rose-100">Cannot Send Sharing Invitation</div>
+              <div className="text-[11px] leading-relaxed mt-0.5">{errorMessage}</div>
+            </div>
+          </div>
+        )}
+
         {/* Submit Button */}
         <button
+          disabled={isSubmitting}
           onClick={handleSaveInvite}
-          className="w-full py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-extrabold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-xs"
+          className="w-full py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 disabled:opacity-50 text-white font-extrabold rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-xs cursor-pointer"
         >
-          <UserPlus className="w-4 h-4" />
-          <span>Save Permissions & Send Circle Invitation</span>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Verifying Registered Account...</span>
+            </>
+          ) : (
+            <>
+              <UserPlus className="w-4 h-4" />
+              <span>Save Permissions & Send Sharing Invitation</span>
+            </>
+          )}
         </button>
 
       </div>
