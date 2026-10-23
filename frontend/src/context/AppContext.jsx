@@ -530,7 +530,38 @@ export const AppProvider = ({ children }) => {
     }
   }, [userCoords, clinicSearchQuery, clinicRadiusKm, clinicFacilityFilter]);
 
-  const requestUserLocation = () => {
+  const requestUserLocation = async () => {
+    // 1. Try native Capacitor Geolocation plugin on Android / iOS
+    try {
+      if (typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.()) {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const perm = await Geolocation.checkPermissions();
+        if (perm.location !== 'granted') {
+          const requested = await Geolocation.requestPermissions();
+          if (requested.location !== 'granted') {
+            setClinicsLocationPermission('denied');
+            showToast('Location permission denied. You can search by city/area manually.', null, '📍');
+            return;
+          }
+        }
+        const pos = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: true });
+        if (pos?.coords) {
+          const coords = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          };
+          setUserCoords(coords);
+          setClinicsLocationPermission('granted');
+          showToast('Location approved! Showing verified clinics near you 📍');
+          fetchNearbyClinics({ lat: coords.latitude, lon: coords.longitude });
+          return;
+        }
+      }
+    } catch (capErr) {
+      console.warn('[AppContext] Capacitor Geolocation notice, using web fallback:', capErr.message);
+    }
+
+    // 2. Standard Browser Geolocation Fallback
     if (!navigator.geolocation) {
       setClinicsLocationPermission('denied');
       showToast('Geolocation is not supported by your browser. Please enter your city/area manually.', null, '📍');

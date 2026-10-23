@@ -9,6 +9,9 @@
     "dev:backend": "python -m uvicorn backend.main:app --port 8000 --reload",
     "server": "python -m uvicorn backend.main:app --port 8000 --reload",
     "build": "npm --prefix frontend run build",
+    "cap:build": "npm --prefix frontend run cap:build",
+    "cap:sync": "npm --prefix frontend run cap:sync",
+    "cap:open": "npm --prefix frontend run cap:open",
     "lint": "npm --prefix frontend run lint",
     "preview": "npm --prefix frontend run preview"
   }

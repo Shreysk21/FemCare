@@ -1,13 +1,63 @@
 // Centralized API Client Service for FemCare
 // Integrates React frontend with FastAPI backend & Supabase/PostgreSQL database
 
-const BASE_URL = '/api';
+/**
+ * Robust URL normalizer that correctly combines any base URL with the endpoint.
+ * Handles missing slashes, extra slashes, missing '/api' prefixes, and native Capacitor environments.
+ * Strictly guarantees that requests match FastAPI backend route structures (e.g. /api/auth/login).
+ */
+export function buildApiUrl(endpoint) {
+  let base = (import.meta.env.VITE_API_BASE_URL || '').trim();
+
+  // If running in Capacitor Android/iOS and base is not set or set to local proxy, fallback to production backend
+  if (!base || base === '/api' || base.includes('localhost') || base.includes('127.0.0.1')) {
+    if (
+      typeof window !== 'undefined' &&
+      (window.Capacitor?.isNativePlatform?.() ||
+        window.location.protocol === 'capacitor:' ||
+        window.location.protocol === 'ionic:' ||
+        (window.location.hostname === 'localhost' && !window.location.port))
+    ) {
+      base = 'https://femcare-backend.onrender.com';
+    }
+  }
+
+  // Ensure clean endpoint with leading slash
+  let cleanEndpoint = endpoint ? (endpoint.startsWith('/') ? endpoint : `/${endpoint}`) : '';
+
+  // Local development with Vite proxy (base is empty or '/api')
+  if (!base || base === '/api') {
+    if (!cleanEndpoint.startsWith('/api')) {
+      cleanEndpoint = `/api${cleanEndpoint}`;
+    }
+    return cleanEndpoint;
+  }
+
+  // Strip trailing slashes from base
+  let origin = base.replace(/\/+$/, '');
+
+  // Strip trailing '/api' from origin so we can assemble cleanly
+  if (origin.endsWith('/api')) {
+    origin = origin.slice(0, -4).replace(/\/+$/, '');
+  }
+
+  // Ensure cleanEndpoint begins with '/api' for FastAPI backend
+  if (!cleanEndpoint.startsWith('/api/')) {
+    if (cleanEndpoint === '/api') {
+      cleanEndpoint = '/api';
+    } else {
+      cleanEndpoint = `/api${cleanEndpoint}`;
+    }
+  }
+
+  return `${origin}${cleanEndpoint}`;
+}
 
 /**
  * Generic request helper with automatic JSON parsing and robust error handling
  */
 async function request(endpoint, options = {}) {
-  const url = `${BASE_URL}${endpoint}`;
+  const url = buildApiUrl(endpoint);
   const token = typeof window !== 'undefined' ? localStorage.getItem('femcare_token') : null;
   const config = {
     headers: {
@@ -22,11 +72,11 @@ async function request(endpoint, options = {}) {
     const response = await fetch(url, config);
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP Error ${response.status}: ${response.statusText}`);
+      throw new Error(errorData.detail || `HTTP Error ${response.status}: ${response.statusText} (${url})`);
     }
     return await response.json();
   } catch (error) {
-    console.warn(`[FemCare API] Failed request to ${endpoint}:`, error.message);
+    console.warn(`[FemCare API] Failed request to ${url}:`, error.message);
     throw error;
   }
 }

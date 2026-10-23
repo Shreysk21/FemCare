@@ -28,7 +28,11 @@ export const BottomNav = () => {
       {/* Consolidated 4-Item Bottom Navigation Bar */}
       <nav 
         className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t transition-colors"
-        style={{ backgroundColor: 'var(--nav-bg)', borderColor: 'var(--border-card)' }}
+        style={{
+          backgroundColor: 'var(--nav-bg)',
+          borderColor: 'var(--border-card)',
+          paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))'
+        }}
       >
         <div className="max-w-md mx-auto px-4 py-2 flex items-center justify-between">
           

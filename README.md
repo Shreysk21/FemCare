@@ -97,4 +97,35 @@ From the root directory:
 - `npm run dev`: Starts the Vite frontend dev server
 - `npm run dev:backend` / `npm run server`: Starts the FastAPI backend server
 - `npm run build`: Builds the production bundle in `frontend/dist`
+- `npm run cap:build`: Builds frontend and synchronizes with Android project
+- `npm run cap:open`: Opens Android project in Android Studio
 - `npm run lint`: Runs code linting for the frontend
+
+---
+
+## 📱 Android Native App (Capacitor + Android Studio)
+
+FemCare is configured as a native Android application using **Capacitor**:
+
+- **App Name**: FemCare
+- **Application ID**: `com.femcare.app`
+- **Native Android Directory**: `frontend/android/`
+
+### 1. Build & Sync Web Assets to Android
+```bash
+npm run cap:build
+```
+
+### 2. Open in Android Studio
+```bash
+npm run cap:open
+# or open Android Studio -> Open Folder -> select 'frontend/android'
+```
+
+### 3. Generate Android APK in Android Studio
+1. In Android Studio, wait for Gradle sync to complete.
+2. In the top menu, click **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+3. Once completed, click **locate** in the notification popup. The installable `.apk` file will be generated at:
+   `frontend/android/app/build/outputs/apk/debug/app-debug.apk`
+4. Connect an Android phone via USB (with USB Debugging enabled) or use an Android Emulator, then click **Run 'app'** (green play button ▶️) to install and launch directly on the device!
+
